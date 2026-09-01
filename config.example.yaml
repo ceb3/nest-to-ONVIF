@@ -8,8 +8,8 @@ google:
   pubsub_subscription: "projects/your-gcp-project/subscriptions/nest-events"
   # Only needed when events.onvif is true. Google's download filename embeds the
   # project and key ID, so rename the file to this rather than pasting the name
-  # it arrived with — `pubsub-sa.json` is git-ignored, an arbitrary name may not
-  # be. In the deployed container the mount makes this `/config/pubsub-sa.json`.
+  # be. Relative paths are resolved against the config file's directory, so in
+  # the deployed container use pubsub-sa.json (resolved to /config/pubsub-sa.json).
   service_account_key: "pubsub-sa.json"
 
 media:

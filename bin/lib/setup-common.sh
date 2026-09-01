@@ -196,13 +196,32 @@ setup_patch_compose_host_ip() {
   python3 - "$compose" "$host_ip" <<'PY'
 import re, sys
 path, host_ip = sys.argv[1], sys.argv[2]
+placeholder = "203.0.113.1"
 text = open(path).read()
-seen = set()
-for old in re.findall(r'"(\d{1,3}(?:\.\d{1,3}){3}):(8554|8080|8888)', text):
-    old_ip = old[0]
-    if old_ip == host_ip or old_ip == "127.0.0.1":
+if placeholder not in text and f'"{host_ip}:8554' not in text:
+    raise SystemExit("no host IP bindings found in docker-compose.yml")
+text = text.replace(f'"{placeholder}:', f'"{host_ip}:')
+required = [
+    ("8554:8554", '      - "127.0.0.1:8554:8554"'),
+    ("8888:8888", '      - "127.0.0.1:8888:8888"'),
+    ("8080:80", '      - "127.0.0.1:8080:80"'),
+]
+for host_port, loopback_line in required:
+    loopback = f'"127.0.0.1:{host_port}"'
+    if loopback in text:
         continue
-    text = text.replace(f'"{old_ip}:', f'"{host_ip}:')
+    host_binding = f'"{host_ip}:{host_port}"'
+    if text.count(host_binding) >= 2:
+        first = text.find(host_binding)
+        second = text.find(host_binding, first + len(host_binding))
+        text = text[:second] + loopback + text[second + len(host_binding):]
+        continue
+    if host_binding in text:
+        text = text.replace(host_binding + "\n", host_binding + "\n" + loopback_line + "\n", 1)
+for _, loopback_line in required:
+    loopback = loopback_line.split('"')[1]
+    if loopback not in text:
+        raise SystemExit(f"missing required loopback binding {loopback}")
 open(path, "w").write(text)
 PY
   setup_info "docker-compose.yml host bindings -> $host_ip"

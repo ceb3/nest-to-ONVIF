@@ -27,7 +27,13 @@ func TestStartEventsNoOpWhenOnvifDisabled(t *testing.T) {
 			ServiceAccountKey:  "pubsub-sa.json",
 		},
 	}
-	rt := startEvents(t.Context(), cfg, nil, log, nil)
+	rt := startEvents(t.Context(), cfg, "config.yaml", nil, log, nil)
 	assert.NotNil(t, rt.bus)
 	rt.stop()
+}
+
+func TestResolveConfigPath(t *testing.T) {
+	assert.Equal(t, "/config/pubsub-sa.json", resolveConfigPath("/config/config.yaml", "pubsub-sa.json"))
+	assert.Equal(t, "/abs/key.json", resolveConfigPath("/config/config.yaml", "/abs/key.json"))
+	assert.Equal(t, "", resolveConfigPath("/config/config.yaml", ""))
 }

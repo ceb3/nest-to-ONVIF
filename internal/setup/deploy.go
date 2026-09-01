@@ -7,12 +7,27 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 )
 
 const bridgeUID = 10001
+
+// composePlaceholderIP is the RFC 5737 address in deploy/docker-compose.yml.
+// Only this literal is rewritten to the deployment host IP; 127.0.0.1 bindings
+// are never touched.
+const composePlaceholderIP = "203.0.113.1"
+
+// composeLoopbackBindings are required for nest-bridge (RTSP publish to
+// 127.0.0.1:8554) and the ONVIF snapshot proxy (127.0.0.1:8080).
+var composeLoopbackBindings = []struct {
+	hostPort string
+	line     string
+}{
+	{"8554:8554", `      - "127.0.0.1:8554:8554"`},
+	{"8888:8888", `      - "127.0.0.1:8888:8888"`},
+	{"8080:80", `      - "127.0.0.1:8080:80"`},
+}
 
 // DeployOptions configures a deployment run.
 type DeployOptions struct {
@@ -104,28 +119,63 @@ func patchComposeHostIP(deployDir, hostIP string, log io.Writer) error {
 	if err != nil {
 		return err
 	}
-	re := regexp.MustCompile(`"(\d{1,3}(?:\.\d{1,3}){3}):(8554|8080|8888)`)
-	matches := re.FindAllStringSubmatch(string(raw), -1)
-	if len(matches) == 0 {
+	text := string(raw)
+	if !strings.Contains(text, `"`+composePlaceholderIP+`:`) &&
+		!strings.Contains(text, `"`+hostIP+`:8554`) {
 		return fmt.Errorf("no host IP bindings found in docker-compose.yml")
 	}
-	text := string(raw)
-	seen := map[string]struct{}{}
-	for _, m := range matches {
-		old := m[1]
-		if old == hostIP || old == "127.0.0.1" {
-			continue
-		}
-		if _, ok := seen[old]; ok {
-			continue
-		}
-		seen[old] = struct{}{}
-		text = strings.ReplaceAll(text, `"`+old+`:`, `"`+hostIP+`:`)
+	text = strings.ReplaceAll(text, `"`+composePlaceholderIP+`:`, `"`+hostIP+`:`)
+	text = ensureComposeLoopbackBindings(text, hostIP)
+	if err := validateComposeLoopbackBindings(text); err != nil {
+		return err
 	}
 	if err := os.WriteFile(path, []byte(text), 0o644); err != nil {
 		return err
 	}
 	fmt.Fprintf(log, "docker-compose.yml host bindings -> %s\n", hostIP)
+	return nil
+}
+
+// ensureComposeLoopbackBindings repairs compose files where a prior deploy
+// rewrote 127.0.0.1 to the host IP, leaving nest-bridge unable to reach
+// MediaMTX on loopback.
+func ensureComposeLoopbackBindings(text, hostIP string) string {
+	for _, binding := range composeLoopbackBindings {
+		loopback := `"127.0.0.1:` + binding.hostPort + `"`
+		if strings.Contains(text, loopback) {
+			continue
+		}
+		hostBinding := `"` + hostIP + `:` + binding.hostPort + `"`
+		if strings.Count(text, hostBinding) >= 2 {
+			// A broken file often has the host IP twice where host + loopback
+			// should be; convert the second occurrence back to loopback.
+			first := strings.Index(text, hostBinding)
+			rest := text[first+len(hostBinding):]
+			second := strings.Index(rest, hostBinding)
+			if second >= 0 {
+				pos := first + len(hostBinding) + second
+				text = text[:pos] + loopback + text[pos+len(hostBinding):]
+				continue
+			}
+		}
+		if strings.Contains(text, hostBinding) {
+			text = strings.Replace(text, hostBinding+"\n", hostBinding+"\n"+binding.line+"\n", 1)
+		}
+	}
+	return text
+}
+
+func validateComposeLoopbackBindings(text string) error {
+	for _, binding := range composeLoopbackBindings {
+		hostSuffix := `:` + binding.hostPort + `"`
+		if !strings.Contains(text, hostSuffix) {
+			continue
+		}
+		loopback := `"127.0.0.1:` + binding.hostPort + `"`
+		if !strings.Contains(text, loopback) {
+			return fmt.Errorf("docker-compose.yml missing required loopback binding %s", loopback)
+		}
+	}
 	return nil
 }
 

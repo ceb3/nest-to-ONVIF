@@ -552,16 +552,35 @@ def generate_configs(settings: DeploySettings) -> None:
 def patch_compose_host_ip(deploy_dir: Path, host_ip: str) -> None:
     compose_path = deploy_dir / "docker-compose.yml"
     text = compose_path.read_text()
-    pattern = re.compile(r'"(\d{1,3}(?:\.\d{1,3}){3}):(8554|8080|8888)')
-    matches = {m.group(1) for m in pattern.finditer(text)}
-    if not matches:
+    placeholder = "203.0.113.1"
+    if placeholder not in text and f'"{host_ip}:8554' not in text:
         raise DeployError(f"could not find host IP bindings in {compose_path}")
-    if len(matches) > 1:
-        print(f"warning: multiple host IPs in compose ({', '.join(sorted(matches))}); rewriting all")
-    for old_ip in matches:
-        if old_ip in (host_ip, "127.0.0.1"):
+    text = text.replace(f'"{placeholder}:', f'"{host_ip}:')
+    required = [
+        ("8554:8554", '      - "127.0.0.1:8554:8554"'),
+        ("8888:8888", '      - "127.0.0.1:8888:8888"'),
+        ("8080:80", '      - "127.0.0.1:8080:80"'),
+    ]
+    for host_port, loopback_line in required:
+        loopback = f'"127.0.0.1:{host_port}"'
+        if loopback in text:
             continue
-        text = text.replace(f'"{old_ip}:', f'"{host_ip}:')
+        host_binding = f'"{host_ip}:{host_port}"'
+        if text.count(host_binding) >= 2:
+            first = text.find(host_binding)
+            second = text.find(host_binding, first + len(host_binding))
+            text = text[:second] + loopback + text[second + len(host_binding) :]
+            continue
+        if host_binding in text:
+            text = text.replace(
+                host_binding + "\n",
+                host_binding + "\n" + loopback_line + "\n",
+                1,
+            )
+    for host_port, _ in required:
+        loopback = f'"127.0.0.1:{host_port}"'
+        if loopback not in text:
+            raise DeployError(f"docker-compose.yml missing required loopback binding {loopback}")
     compose_path.write_text(text)
     print(f"docker-compose.yml host bindings -> {host_ip}")
 

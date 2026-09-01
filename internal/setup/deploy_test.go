@@ -40,6 +40,36 @@ services:
 	assert.NotContains(t, text, `"203.0.113.1:`)
 }
 
+func TestPatchComposeHostIPRepairsDuplicateHostBindings(t *testing.T) {
+	dir := t.TempDir()
+	compose := filepath.Join(dir, "docker-compose.yml")
+	// Simulates a prior deploy that rewrote loopback to the host IP.
+	require.NoError(t, os.WriteFile(compose, []byte(`
+services:
+  mediamtx:
+    ports:
+      - "192.168.1.15:8554:8554"
+      - "192.168.1.15:8554:8554"
+      - "192.168.1.15:8888:8888"
+      - "192.168.1.15:8888:8888"
+  snapshots:
+    ports:
+      - "192.168.1.15:8080:80"
+      - "192.168.1.15:8080:80"
+`), 0o644))
+
+	require.NoError(t, patchComposeHostIP(dir, "192.168.1.15", &bytes.Buffer{}))
+	raw, err := os.ReadFile(compose)
+	require.NoError(t, err)
+	text := string(raw)
+	assert.Contains(t, text, `"192.168.1.15:8554:8554"`)
+	assert.Contains(t, text, `"127.0.0.1:8554:8554"`)
+	assert.Contains(t, text, `"192.168.1.15:8888:8888"`)
+	assert.Contains(t, text, `"127.0.0.1:8888:8888"`)
+	assert.Contains(t, text, `"192.168.1.15:8080:80"`)
+	assert.Contains(t, text, `"127.0.0.1:8080:80"`)
+}
+
 func TestPatchComposeHostIPNoOpWhenAlreadySet(t *testing.T) {
 	dir := t.TempDir()
 	compose := filepath.Join(dir, "docker-compose.yml")

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/ceb3/nest-to-ONVIF/internal/config"
@@ -69,7 +70,7 @@ func RunServe(ctx context.Context, cfgPath, tokenPath string) error {
 	// Events are an enhancement; streaming is the product. Everything below
 	// either starts or logs why it did not, and never returns an error.
 	var wg sync.WaitGroup
-	eventsRT := startEvents(ctx, cfg, clock, logger, &wg)
+	eventsRT := startEvents(ctx, cfg, cfgPath, clock, logger, &wg)
 
 	if listen := cfg.ViewerListen(); listen != "" {
 		wg.Add(1)
@@ -101,7 +102,7 @@ type eventRuntime struct {
 
 // startEvents brings up the Pub/Sub subscriber and optional ONVIF motion
 // delivery, returning a handle that stops them.
-func startEvents(ctx context.Context, cfg *config.Config, clock scheduler.Clock, logger *slog.Logger, wg *sync.WaitGroup) eventRuntime {
+func startEvents(ctx context.Context, cfg *config.Config, cfgPath string, clock scheduler.Clock, logger *slog.Logger, wg *sync.WaitGroup) eventRuntime {
 	rt := eventRuntime{stop: func() {}, bus: viewer.NewEventBus()}
 	log := logger.With("component", "events")
 
@@ -132,7 +133,7 @@ func startEvents(ctx context.Context, cfg *config.Config, clock scheduler.Clock,
 
 	// The SDM user token cannot read Pub/Sub — sdm.service is the only scope the
 	// SDM API issues — so events authenticate as a separate service account.
-	tokenSource, err := events.TokenSourceFromKeyFile(ctx, cfg.Google.ServiceAccountKey)
+	tokenSource, err := events.TokenSourceFromKeyFile(ctx, resolveConfigPath(cfgPath, cfg.Google.ServiceAccountKey))
 	if err != nil {
 		log.Warn("nest detections → ONVIF motion disabled", "error", err)
 		return rt
@@ -173,4 +174,14 @@ func startEvents(ctx context.Context, cfg *config.Config, clock scheduler.Clock,
 	}
 
 	return rt
+}
+
+// resolveConfigPath resolves paths from config.yaml relative to that file's
+// directory. The wizard writes service_account_key: pubsub-sa.json beside
+// config.yaml; in the container that pair lives under /config/.
+func resolveConfigPath(configPath, p string) string {
+	if p == "" || filepath.IsAbs(p) {
+		return p
+	}
+	return filepath.Join(filepath.Dir(configPath), p)
 }
