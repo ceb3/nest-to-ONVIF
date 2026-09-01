@@ -7,9 +7,11 @@ services:
       # Bound to the host's own address, not 0.0.0.0: the onvif container runs
       # an RTSP proxy on <camera-ip>:8554 for each macvlan IP, and a wildcard
       # bind here takes those addresses first and fails it with EADDRINUSE.
-      - "192.168.1.15:8554:8554"
+      # 203.0.113.1 is a placeholder (RFC 5737); setup deploy patches this to
+      # network.host_ip from config (see patchComposeHostIP / bin/setup-deploy).
+      - "203.0.113.1:8554:8554"
       - "127.0.0.1:8554:8554"
-      - "192.168.1.15:8888:8888"
+      - "203.0.113.1:8888:8888"
       - "127.0.0.1:8888:8888"
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:ro
@@ -25,7 +27,7 @@ services:
       # Loopback is required, not optional: the onvif container proxies Protect's
       # snapshot request to the http_port on its host source, which is 127.0.0.1,
       # and without this binding every snapshot fails with 502.
-      - "192.168.1.15:8080:80"
+      - "203.0.113.1:8080:80"
       - "127.0.0.1:8080:80"
     volumes:
       - snapshots:/usr/share/nginx/html:ro

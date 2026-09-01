@@ -17,13 +17,13 @@ func TestPatchComposeHostIPPreservesLoopback(t *testing.T) {
 services:
   mediamtx:
     ports:
-      - "192.168.1.15:8554:8554"
+      - "203.0.113.1:8554:8554"
       - "127.0.0.1:8554:8554"
-      - "192.168.1.15:8888:8888"
+      - "203.0.113.1:8888:8888"
       - "127.0.0.1:8888:8888"
   snapshots:
     ports:
-      - "192.168.1.15:8080:80"
+      - "203.0.113.1:8080:80"
       - "127.0.0.1:8080:80"
 `), 0o644))
 
@@ -37,7 +37,7 @@ services:
 	assert.Contains(t, text, `"127.0.0.1:8888:8888"`)
 	assert.Contains(t, text, `"192.168.1.20:8080:80"`)
 	assert.Contains(t, text, `"127.0.0.1:8080:80"`)
-	assert.NotContains(t, text, `"192.168.1.15:`)
+	assert.NotContains(t, text, `"203.0.113.1:`)
 }
 
 func TestPatchComposeHostIPNoOpWhenAlreadySet(t *testing.T) {
