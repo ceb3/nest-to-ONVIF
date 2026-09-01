@@ -69,20 +69,20 @@ func folded(s string) *yaml.Node {
 
 // document is the generated file. Field order is emission order.
 type document struct {
-	LogLevel       string    `yaml:"logLevel"`
-	RTSP           bool      `yaml:"rtsp"`
-	RTSPAddress    string    `yaml:"rtspAddress"`
-	RTSPTransports []string  `yaml:"rtspTransports"`
-	HLS            bool      `yaml:"hls"`
-	HLSAddress     string    `yaml:"hlsAddress,omitempty"`
+	LogLevel       string   `yaml:"logLevel"`
+	RTSP           bool     `yaml:"rtsp"`
+	RTSPAddress    string   `yaml:"rtspAddress"`
+	RTSPTransports []string `yaml:"rtspTransports"`
+	HLS            bool     `yaml:"hls"`
+	HLSAddress     string   `yaml:"hlsAddress,omitempty"`
 	// MPEG-TS HLS plays in every browser via hls.js; the default low-latency
 	// fMP4 variant breaks Safari's native player and needs LL-HLS support.
-	HLSVariant      string   `yaml:"hlsVariant,omitempty"`
-	HLSAllowOrigins []string `yaml:"hlsAllowOrigins,omitempty"`
-	WebRTC         bool      `yaml:"webrtc"`
-	RTMP           bool      `yaml:"rtmp"`
-	SRT            bool      `yaml:"srt"`
-	Paths          yaml.Node `yaml:"paths"`
+	HLSVariant      string    `yaml:"hlsVariant,omitempty"`
+	HLSAllowOrigins []string  `yaml:"hlsAllowOrigins,omitempty"`
+	WebRTC          bool      `yaml:"webrtc"`
+	RTMP            bool      `yaml:"rtmp"`
+	SRT             bool      `yaml:"srt"`
+	Paths           yaml.Node `yaml:"paths"`
 }
 
 // Generate renders the MediaMTX configuration for every camera in cfg.
@@ -135,12 +135,12 @@ func Generate(cfg config.Config) ([]byte, error) {
 		RTSPAddress: ":8554",
 		// Protect and the renditions both use TCP; UDP would add a failure mode
 		// with no benefit here.
-		RTSPTransports: []string{"tcp"},
-		HLS:            true,
-		HLSAddress:     ":8888",
-		HLSVariant:     "mpegts",
+		RTSPTransports:  []string{"tcp"},
+		HLS:             true,
+		HLSAddress:      ":8888",
+		HLSVariant:      "mpegts",
 		HLSAllowOrigins: []string{"*"},
-		Paths:          paths,
+		Paths:           paths,
 	}
 
 	var buf bytes.Buffer

@@ -20,10 +20,10 @@ import (
 )
 
 const (
-	placeholderProjectID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-	placeholderClientID  = "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
-	placeholderSecret    = "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx"
-	placeholderPubSub    = "projects/your-gcp-project/subscriptions/nest-events"
+	placeholderProjectID  = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+	placeholderClientID   = "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+	placeholderSecret     = "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx"
+	placeholderPubSub     = "projects/your-gcp-project/subscriptions/nest-events"
 	placeholderEnterprise = "00000000-0000-0000-0000-000000000000"
 )
 
@@ -135,12 +135,12 @@ func backupFile(path string) error {
 func writeConfigYAML(path string, cfg *config.Config) error {
 	doc := map[string]any{
 		"google": map[string]any{
-			"project_id":           cfg.Google.ProjectID,
-			"client_id":            cfg.Google.ClientID,
-			"client_secret":        cfg.Google.ClientSecret,
-			"redirect_uri":         cfg.Google.RedirectURI,
-			"pubsub_subscription":  cfg.Google.PubSubSubscription,
-			"service_account_key":  cfg.Google.ServiceAccountKey,
+			"project_id":          cfg.Google.ProjectID,
+			"client_id":           cfg.Google.ClientID,
+			"client_secret":       cfg.Google.ClientSecret,
+			"redirect_uri":        cfg.Google.RedirectURI,
+			"pubsub_subscription": cfg.Google.PubSubSubscription,
+			"service_account_key": cfg.Google.ServiceAccountKey,
 		},
 		"media": map[string]any{
 			"rtsp_base_url": cfg.Media.RTSPBaseURL,

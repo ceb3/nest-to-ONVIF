@@ -41,16 +41,16 @@ type EventsInput struct {
 
 // CameraInput is one camera the operator chose to deploy.
 type CameraInput struct {
-	DeviceID  string `json:"device_id"`
-	Name      string `json:"name"`
-	Selected  bool   `json:"selected"`
-	Audio     bool   `json:"audio"`
+	DeviceID    string `json:"device_id"`
+	Name        string `json:"name"`
+	Selected    bool   `json:"selected"`
+	Audio       bool   `json:"audio"`
 	EventsOnvif bool   `json:"events_onvif"`
 	Linger      string `json:"linger,omitempty"`
-	MAC       string `json:"mac,omitempty"`
-	IP        string `json:"ip,omitempty"`
-	Type      string `json:"type,omitempty"`      // UI metadata; not written to config.yaml
-	Protocols string `json:"protocols,omitempty"` // UI metadata; not written to config.yaml
+	MAC         string `json:"mac,omitempty"`
+	IP          string `json:"ip,omitempty"`
+	Type        string `json:"type,omitempty"`      // UI metadata; not written to config.yaml
+	Protocols   string `json:"protocols,omitempty"` // UI metadata; not written to config.yaml
 }
 
 // CamerasInput is the camera selection step payload.
@@ -76,12 +76,12 @@ type ConfigView struct {
 
 // CameraView is one configured camera for review.
 type CameraView struct {
-	DeviceID string             `json:"device_id"`
-	Name     string             `json:"name"`
-	Audio    bool               `json:"audio"`
+	DeviceID    string             `json:"device_id"`
+	Name        string             `json:"name"`
+	Audio       bool               `json:"audio"`
 	EventsOnvif bool               `json:"events_onvif"`
 	Linger      string             `json:"linger,omitempty"`
-	ONVIF    config.ONVIFConfig `json:"onvif"`
+	ONVIF       config.ONVIFConfig `json:"onvif"`
 }
 
 // AuthStartResponse is returned by POST /api/auth/start.

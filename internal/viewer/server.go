@@ -15,14 +15,14 @@ import (
 
 // CameraView is one tile in the viewer grid.
 type CameraView struct {
-	Name       string `json:"name"`
-	Path       string `json:"path"`
-	IP         string `json:"ip"`
-	Audio      bool   `json:"audio"`
-	Events     bool   `json:"events"`
-	HLSLQ      string `json:"hls_lq"`
-	HLSHQ      string `json:"hls_hq"`
-	Snapshot   string `json:"snapshot"`
+	Name     string `json:"name"`
+	Path     string `json:"path"`
+	IP       string `json:"ip"`
+	Audio    bool   `json:"audio"`
+	Events   bool   `json:"events"`
+	HLSLQ    string `json:"hls_lq"`
+	HLSHQ    string `json:"hls_hq"`
+	Snapshot string `json:"snapshot"`
 }
 
 // Server serves the LAN viewer page and APIs.
@@ -97,9 +97,9 @@ func (s *Server) handleCameras(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	writeJSON(w, map[string]any{
-		"cameras":     out,
-		"events_on":   s.eventsOn,
-		"page_size":   6,
+		"cameras":   out,
+		"events_on": s.eventsOn,
+		"page_size": 6,
 	})
 }
 

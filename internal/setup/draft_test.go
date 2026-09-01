@@ -87,7 +87,7 @@ func TestSaveAndLoadWizardDraft(t *testing.T) {
 			ClientSecret: "secret",
 			RedirectURI:  "http://localhost:8190/oauth2callback",
 		},
-		Events: EventsInput{PubSubSubscription: "projects/p/subscriptions/sdm-events"},
+		Events:  EventsInput{PubSubSubscription: "projects/p/subscriptions/sdm-events"},
 		Network: NetworkInput{HostIP: "192.168.1.15", ParentIface: "eth0"},
 		Cameras: []CameraInput{
 			{DeviceID: "a", Name: "Front", Selected: true, MAC: "02:4E:53:54:00:01", IP: "192.168.1.8"},
@@ -147,7 +147,7 @@ cameras:
     onvif: { mac: "02:4E:53:54:00:01", ip: "192.168.1.8" }
 `), 0o600))
 	require.NoError(t, saveWizardDraft(dir, &Draft{
-		Google: GoogleInput{ProjectID: "draft-project"},
+		Google:  GoogleInput{ProjectID: "draft-project"},
 		Network: NetworkInput{HostIP: "192.168.1.20"},
 	}))
 

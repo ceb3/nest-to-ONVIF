@@ -186,13 +186,13 @@ func TestGenerateKeepsServerSettingsAlongsideThePaths(t *testing.T) {
 	require.NoError(t, err)
 
 	var doc struct {
-		RTSPAddress    string   `yaml:"rtspAddress"`
-		RTSPTransports []string `yaml:"rtspTransports"`
-		HLS            bool     `yaml:"hls"`
-		HLSAddress     string   `yaml:"hlsAddress"`
-		HLSVariant     string   `yaml:"hlsVariant"`
+		RTSPAddress     string   `yaml:"rtspAddress"`
+		RTSPTransports  []string `yaml:"rtspTransports"`
+		HLS             bool     `yaml:"hls"`
+		HLSAddress      string   `yaml:"hlsAddress"`
+		HLSVariant      string   `yaml:"hlsVariant"`
 		HLSAllowOrigins []string `yaml:"hlsAllowOrigins"`
-		WebRTC         bool     `yaml:"webrtc"`
+		WebRTC          bool     `yaml:"webrtc"`
 	}
 	require.NoError(t, yaml.Unmarshal(out, &doc))
 

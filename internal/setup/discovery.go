@@ -76,8 +76,8 @@ func checkLinux() Requirement {
 	}
 	return Requirement{
 		ID: id, Label: "Linux host",
-		Status: RequirementFail,
-		Detail: fmt.Sprintf("This machine is %s/%s. The ONVIF layer needs Linux for macvlan interfaces and host-networked Docker containers. Run nest-bridge setup on your deployment VM (use SSH port forwarding to reach the wizard).", runtime.GOOS, runtime.GOARCH),
+		Status:   RequirementFail,
+		Detail:   fmt.Sprintf("This machine is %s/%s. The ONVIF layer needs Linux for macvlan interfaces and host-networked Docker containers. Run nest-bridge setup on your deployment VM (use SSH port forwarding to reach the wizard).", runtime.GOOS, runtime.GOARCH),
 		Required: true,
 	}
 }
@@ -88,29 +88,29 @@ func checkMacvlanPlatform() Requirement {
 	case "linux":
 		return Requirement{
 			ID: id, Label: "macvlan networking",
-			Status: RequirementPass,
-			Detail: "Linux supports per-camera macvlan interfaces for distinct ONVIF identities.",
+			Status:   RequirementPass,
+			Detail:   "Linux supports per-camera macvlan interfaces for distinct ONVIF identities.",
 			Required: true,
 		}
 	case "darwin":
 		return Requirement{
 			ID: id, Label: "macvlan networking",
-			Status: RequirementFail,
-			Detail: "macOS cannot provide per-camera MAC addresses (Docker Desktop uses a VM; macvlan is not available on the LAN).",
+			Status:   RequirementFail,
+			Detail:   "macOS cannot provide per-camera MAC addresses (Docker Desktop uses a VM; macvlan is not available on the LAN).",
 			Required: true,
 		}
 	case "windows":
 		return Requirement{
 			ID: id, Label: "macvlan networking",
-			Status: RequirementFail,
-			Detail: "Windows cannot provide per-camera MAC addresses for ONVIF adoption.",
+			Status:   RequirementFail,
+			Detail:   "Windows cannot provide per-camera MAC addresses for ONVIF adoption.",
 			Required: true,
 		}
 	default:
 		return Requirement{
 			ID: id, Label: "macvlan networking",
-			Status: RequirementFail,
-			Detail: fmt.Sprintf("%s is not a supported deployment platform.", runtime.GOOS),
+			Status:   RequirementFail,
+			Detail:   fmt.Sprintf("%s is not a supported deployment platform.", runtime.GOOS),
 			Required: true,
 		}
 	}
@@ -123,23 +123,23 @@ func checkRepoLayout(repoRoot, deployDir string) Requirement {
 	if _, err := os.Stat(compose); err != nil {
 		return Requirement{
 			ID: id, Label: "Repository layout",
-			Status: RequirementFail,
-			Detail: fmt.Sprintf("Missing %s. Run setup from the repository root or set NEST_BRIDGE_ROOT.", compose),
+			Status:   RequirementFail,
+			Detail:   fmt.Sprintf("Missing %s. Run setup from the repository root or set NEST_BRIDGE_ROOT.", compose),
 			Required: true,
 		}
 	}
 	if _, err := os.Stat(macvlan); err != nil {
 		return Requirement{
 			ID: id, Label: "Repository layout",
-			Status: RequirementFail,
-			Detail: fmt.Sprintf("Missing %s.", macvlan),
+			Status:   RequirementFail,
+			Detail:   fmt.Sprintf("Missing %s.", macvlan),
 			Required: true,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "Repository layout",
-		Status: RequirementPass,
-		Detail: fmt.Sprintf("Found deploy files under %s.", deployDir),
+		Status:   RequirementPass,
+		Detail:   fmt.Sprintf("Found deploy files under %s.", deployDir),
 		Required: true,
 	}
 }
@@ -149,15 +149,15 @@ func checkBridgeBinary(repoRoot string) Requirement {
 	if _, err := findBridgeBinary(repoRoot); err != nil {
 		return Requirement{
 			ID: id, Label: "nest-bridge binary",
-			Status: RequirementFail,
-			Detail: "Run bin/build-bridge (or make build) in the repository root.",
+			Status:   RequirementFail,
+			Detail:   "Run bin/build-bridge (or make build) in the repository root.",
 			Required: true,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "nest-bridge binary",
-		Status: RequirementPass,
-		Detail: "Built nest-bridge binary found.",
+		Status:   RequirementPass,
+		Detail:   "Built nest-bridge binary found.",
 		Required: true,
 	}
 }
@@ -167,15 +167,15 @@ func checkDockerRequirement() Requirement {
 	if _, err := exec.LookPath("docker"); err != nil {
 		return Requirement{
 			ID: id, Label: "Docker",
-			Status: RequirementFail,
-			Detail: "docker not found in PATH. On the deployment host run: sudo bin/install-docker",
+			Status:   RequirementFail,
+			Detail:   "docker not found in PATH. On the deployment host run: sudo bin/install-docker",
 			Required: true,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "Docker",
-		Status: RequirementPass,
-		Detail: "docker command available.",
+		Status:   RequirementPass,
+		Detail:   "docker command available.",
 		Required: true,
 	}
 }
@@ -187,22 +187,22 @@ func checkDockerComposeRequirement() Requirement {
 		if msg == "docker not found in PATH" {
 			return Requirement{
 				ID: id, Label: "Docker Compose",
-				Status: RequirementFail,
-				Detail: "Install Docker first: sudo bin/install-docker",
+				Status:   RequirementFail,
+				Detail:   "Install Docker first: sudo bin/install-docker",
 				Required: true,
 			}
 		}
 		return Requirement{
 			ID: id, Label: "Docker Compose",
-			Status: RequirementFail,
-			Detail: msg + " — run: sudo bin/install-docker",
+			Status:   RequirementFail,
+			Detail:   msg + " — run: sudo bin/install-docker",
 			Required: true,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "Docker Compose",
-		Status: RequirementPass,
-		Detail: "docker compose available.",
+		Status:   RequirementPass,
+		Detail:   "docker compose available.",
 		Required: true,
 	}
 }
@@ -213,16 +213,16 @@ func checkHostNetworking() Requirement {
 	if err != nil {
 		return Requirement{
 			ID: id, Label: "LAN network interface",
-			Status: RequirementFail,
-			Detail: err.Error(),
+			Status:   RequirementFail,
+			Detail:   err.Error(),
 			Required: true,
 		}
 	}
 	if len(ifaces) == 0 {
 		return Requirement{
 			ID: id, Label: "LAN network interface",
-			Status: RequirementFail,
-			Detail: "No up interface with a non-loopback IPv4 address was found. Connect this host to your LAN before deploying.",
+			Status:   RequirementFail,
+			Detail:   "No up interface with a non-loopback IPv4 address was found. Connect this host to your LAN before deploying.",
 			Required: true,
 		}
 	}
@@ -232,8 +232,8 @@ func checkHostNetworking() Requirement {
 	}
 	return Requirement{
 		ID: id, Label: "LAN network interface",
-		Status: RequirementPass,
-		Detail: "Detected: " + joinLimited(names, ", ", 4),
+		Status:   RequirementPass,
+		Detail:   "Detected: " + joinLimited(names, ", ", 4),
 		Required: true,
 	}
 }
@@ -246,15 +246,15 @@ func checkIPCommand() Requirement {
 	if _, err := exec.LookPath("ip"); err != nil {
 		return Requirement{
 			ID: id, Label: "iproute2 (ip)",
-			Status: RequirementFail,
-			Detail: "ip command not found. Run: sudo bin/install-packages",
+			Status:   RequirementFail,
+			Detail:   "ip command not found. Run: sudo bin/install-packages",
 			Required: true,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "iproute2 (ip)",
-		Status: RequirementPass,
-		Detail: "ip command available for macvlan-setup.sh.",
+		Status:   RequirementPass,
+		Detail:   "ip command available for macvlan-setup.sh.",
 		Required: true,
 	}
 }
@@ -264,15 +264,15 @@ func checkBash() Requirement {
 	if _, err := exec.LookPath("bash"); err != nil {
 		return Requirement{
 			ID: id, Label: "bash",
-			Status: RequirementFail,
-			Detail: "bash not found. Run: sudo bin/install-packages",
+			Status:   RequirementFail,
+			Detail:   "bash not found. Run: sudo bin/install-packages",
 			Required: true,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "bash",
-		Status: RequirementPass,
-		Detail: "bash available.",
+		Status:   RequirementPass,
+		Detail:   "bash available.",
 		Required: true,
 	}
 }
@@ -282,23 +282,23 @@ func checkPrivilegedHelper() Requirement {
 	if os.Geteuid() == 0 {
 		return Requirement{
 			ID: id, Label: "Privileged setup (root or sudo)",
-			Status: RequirementPass,
-			Detail: "Running as root.",
+			Status:   RequirementPass,
+			Detail:   "Running as root.",
 			Required: false,
 		}
 	}
 	if _, err := exec.LookPath("sudo"); err != nil {
 		return Requirement{
 			ID: id, Label: "Privileged setup (root or sudo)",
-			Status: RequirementWarn,
-			Detail: "Not root and sudo not found. macvlan and credential install need elevation — use sudo bin/setup-host or SSH as root.",
+			Status:   RequirementWarn,
+			Detail:   "Not root and sudo not found. macvlan and credential install need elevation — use sudo bin/setup-host or SSH as root.",
 			Required: false,
 		}
 	}
 	return Requirement{
 		ID: id, Label: "Privileged setup (root or sudo)",
-		Status: RequirementPass,
-		Detail: "sudo is available for macvlan setup during deploy.",
+		Status:   RequirementPass,
+		Detail:   "sudo is available for macvlan setup during deploy.",
 		Required: false,
 	}
 }

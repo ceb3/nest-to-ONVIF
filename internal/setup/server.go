@@ -32,9 +32,9 @@ type Server struct {
 	draft      Draft
 	lastDeploy string
 
-	oauthState   string
-	oauthWait    chan oauthResult
-	oauthMu      sync.Mutex
+	oauthState string
+	oauthWait  chan oauthResult
+	oauthMu    sync.Mutex
 }
 
 type oauthResult struct {

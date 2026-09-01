@@ -36,18 +36,18 @@ type draftFile struct {
 
 // Draft holds wizard state before it is written to disk.
 type Draft struct {
-	Google          GoogleInput
-	Media           config.MediaConfig
-	Events          EventsInput
-	Network         NetworkInput
-	Cameras         []CameraInput
-	PubSubKey       []byte
-	HasPubSubKey    bool
+	Google       GoogleInput
+	Media        config.MediaConfig
+	Events       EventsInput
+	Network      NetworkInput
+	Cameras      []CameraInput
+	PubSubKey    []byte
+	HasPubSubKey bool
 }
 
 func defaultDraft() Draft {
 	return Draft{
-		Media: config.MediaConfig{RTSPBaseURL: "rtsp://127.0.0.1:8554"},
+		Media:   config.MediaConfig{RTSPBaseURL: "rtsp://127.0.0.1:8554"},
 		Network: NetworkInput{},
 	}
 }
