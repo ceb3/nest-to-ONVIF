@@ -17,7 +17,8 @@ media:
   rtsp_base_url: "rtsp://127.0.0.1:8554"
 
 # Optional: forward Nest detections from Pub/Sub to each camera's ONVIF motion
-# endpoint. Disabled by default — see docs/EVENTS.md for when to enable it.
+# endpoint. Disabled by default — see docs/EVENTS.md.
+# Requires events.onvif: true AND a per-camera event: block (wizard checkbox).
 events:
   onvif: false
 

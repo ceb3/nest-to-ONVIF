@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/sdm"
+	"github.com/ceb3/nest-to-ONVIF/internal/sdm"
 )
 
 func (s *Server) handleAuthStart(w http.ResponseWriter, r *http.Request) {

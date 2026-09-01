@@ -12,9 +12,9 @@ import (
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v4"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/scheduler"
-	"github.com/mustacheride/nest-to-ONVIF/internal/sdm"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/scheduler"
+	"github.com/ceb3/nest-to-ONVIF/internal/sdm"
 )
 
 type State string

@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
 )
 
 // ONVIF forwarding is opt-in. The default config must not start Pub/Sub.

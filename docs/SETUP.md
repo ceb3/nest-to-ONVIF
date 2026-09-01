@@ -35,7 +35,7 @@ adoption presents new hardware to your NVR.
 
 ```bash
 sudo mkdir -p /opt
-sudo git clone https://github.com/mustacheride/nest-to-ONVIF.git /opt/nest-bridge
+sudo git clone https://github.com/ceb3/nest-to-ONVIF.git /opt/nest-bridge
 cd /opt/nest-bridge
 bin/host-check
 sudo bin/install-packages    # if needed
@@ -89,7 +89,7 @@ Progress is saved in `setup-draft.yaml`. Existing `config.yaml` is loaded for re
 | **1. System** | Host checks; links to `bin/` fix scripts |
 | **2. Google** | Credentials; checklist links to [`GOOGLE-CLOUD.md`](GOOGLE-CLOUD.md) |
 | **3. Authorize** | OAuth → `tokens.json` |
-| **4. Cameras** | SDM device list; ONVIF MAC/IP per camera; audio / events toggles — wire-powered only |
+| **4. Cameras** | SDM device list; ONVIF MAC/IP per camera; **audio** and **ONVIF motion events** toggles per camera (events require Pub/Sub on step 2) — wire-powered only |
 | **5. Network** | macvlan parent interface; host IP for compose bindings |
 | **6. Deploy** | Writes `config.yaml`, generates sidecar configs, `docker compose up` |
 
@@ -122,8 +122,9 @@ sudo bin/setup-deploy && sudo bin/setup-macvlan
 cd deploy && docker compose up -d
 ```
 
-For `events.onvif`, see [`EVENTS.md`](EVENTS.md) and [`GOOGLE-CLOUD.md`](GOOGLE-CLOUD.md).
-Never commit `config.yaml`, `tokens.json`, or service-account keys.
+For `events.onvif` and per-camera `event:` blocks, see [`EVENTS.md`](EVENTS.md) and
+[`GOOGLE-CLOUD.md`](GOOGLE-CLOUD.md). Never commit `config.yaml`, `tokens.json`, or
+service-account keys.
 
 ---
 
@@ -133,7 +134,7 @@ Never commit `config.yaml`, `tokens.json`, or service-account keys.
 | --- | --- |
 | **mediamtx** | RTSP, HLS (`:8888`), ffmpeg transcode, snapshots |
 | **snapshots** | nginx JPEGs on `:8080` |
-| **onvif** | WS-Discovery, profiles, RTSP proxy per camera IP |
+| **onvif** | WS-Discovery, profiles, RTSP proxy per camera IP; optional ONVIF Events (three motion topics) |
 | **bridge** | `nest-bridge serve`; LAN viewer on `:8090` |
 
 Compose binds MediaMTX/snapshot/HLS ports to the **host IP** and loopback so they do not

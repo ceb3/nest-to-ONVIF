@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/media"
-	"github.com/mustacheride/nest-to-ONVIF/internal/scheduler"
-	"github.com/mustacheride/nest-to-ONVIF/internal/sdm"
-	"github.com/mustacheride/nest-to-ONVIF/internal/session"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/media"
+	"github.com/ceb3/nest-to-ONVIF/internal/scheduler"
+	"github.com/ceb3/nest-to-ONVIF/internal/sdm"
+	"github.com/ceb3/nest-to-ONVIF/internal/session"
 )
 
 const (

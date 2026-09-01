@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
 )
 
 func TestAuthCodeURLTargetsPartnerConnections(t *testing.T) {

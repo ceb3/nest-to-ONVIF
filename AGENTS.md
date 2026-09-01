@@ -9,6 +9,9 @@ Management (SDM) API and republishes each camera as a virtual ONVIF device on th
 deployment is **Linux-only** (macvlan + host-networked Docker). Development on macOS is fine for
 building and unit tests; integration testing needs a Linux VM or the production host.
 
+End-to-end architecture (data flows, containers, third-party projects) is documented in
+[README.md § Architecture](README.md#architecture).
+
 Read these before making non-trivial changes:
 
 | Doc | When to read |

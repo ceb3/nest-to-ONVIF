@@ -1,6 +1,6 @@
 package setup
 
-import "github.com/mustacheride/nest-to-ONVIF/internal/config"
+import "github.com/ceb3/nest-to-ONVIF/internal/config"
 
 // Status is returned by GET /api/status.
 type Status struct {

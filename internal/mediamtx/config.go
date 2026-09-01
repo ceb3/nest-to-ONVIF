@@ -21,7 +21,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
 )
 
 // snapshotDir is where the snapshot writer drops JPEGs. It is a volume shared

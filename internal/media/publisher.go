@@ -19,8 +19,8 @@ import (
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v4"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/session"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/session"
 )
 
 const (

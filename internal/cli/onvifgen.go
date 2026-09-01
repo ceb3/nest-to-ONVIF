@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/url"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/onvif"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/onvif"
 )
 
 // defaultSnapshotPort is the port the snapshot file server listens on, served

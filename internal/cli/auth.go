@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/sdm"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/sdm"
 )
 
 type authResult struct {

@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/scheduler"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/scheduler"
 )
 
 // DefaultLinger applies to any camera that configures none. A window shorter

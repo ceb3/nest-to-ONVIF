@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
 )
 
 // Runner is the part of a session manager the supervisor depends on.

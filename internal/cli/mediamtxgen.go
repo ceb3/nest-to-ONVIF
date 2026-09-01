@@ -3,8 +3,8 @@ package cli
 import (
 	"io"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/mediamtx"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/mediamtx"
 )
 
 // RunMediaMTXConfig writes the MediaMTX server configuration, derived from the

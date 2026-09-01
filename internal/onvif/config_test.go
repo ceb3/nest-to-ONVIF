@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/onvif"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/onvif"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

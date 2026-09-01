@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/scheduler"
-	"github.com/mustacheride/nest-to-ONVIF/internal/sdm"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/scheduler"
+	"github.com/ceb3/nest-to-ONVIF/internal/sdm"
 )
 
 func testManager() *Manager {

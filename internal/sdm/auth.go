@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
 )
 
 // Scope is the only OAuth scope the SDM API accepts.

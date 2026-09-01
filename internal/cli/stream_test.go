@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/media"
-	"github.com/mustacheride/nest-to-ONVIF/internal/session"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/media"
+	"github.com/ceb3/nest-to-ONVIF/internal/session"
 )
 
 func TestResolveCameraByFriendlyName(t *testing.T) {

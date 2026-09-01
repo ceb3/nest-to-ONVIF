@@ -1,4 +1,4 @@
-module github.com/mustacheride/nest-to-ONVIF
+module github.com/ceb3/nest-to-ONVIF
 
 go 1.27.0
 

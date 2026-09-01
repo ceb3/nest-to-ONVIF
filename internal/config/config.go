@@ -126,9 +126,9 @@ func (c Camera) PublishURL(base string) string {
 
 // EventsConfig controls whether Nest detections pulled from Pub/Sub are
 // forwarded to the virtual cameras' ONVIF motion endpoints. It is off by
-// default because many Protect consoles — including 7.2.105 on a UDR7 —
-// ignore third-party ONVIF motion while still detecting motion from the RTSP
-// stream themselves.
+// default because some recorders still prefer RTSP-based motion analysis
+// for third-party cameras; when events.onvif is enabled we emit MotionAlarm,
+// CellMotionDetector, and MotionRegionDetector for clients that honour them.
 type EventsConfig struct {
 	Onvif bool `yaml:"onvif"`
 }

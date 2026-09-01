@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/cli"
+	"github.com/ceb3/nest-to-ONVIF/internal/cli"
 )
 
 var version = "dev"

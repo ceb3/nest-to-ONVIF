@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/events"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/events"
 )
 
 // CameraView is one tile in the viewer grid.

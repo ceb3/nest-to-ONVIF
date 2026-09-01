@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/setup"
+	"github.com/ceb3/nest-to-ONVIF/internal/setup"
 )
 
 // RunSetup starts the browser-based deployment wizard.

@@ -298,7 +298,7 @@ subscribers it reached:
 {"ok":true,"motion":true,"changed":true,"subscribers":1}
 ```
 
-The message pulled after the trigger:
+The message pulled after the trigger (one of three topics emitted per edge):
 
 ```
 <wsnt:Topic Dialect="http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet">
@@ -306,6 +306,10 @@ The message pulled after the trigger:
 <tt:Message UtcTime="2026-08-30T20:34:01Z" PropertyOperation="Changed">
   <tt:Data><tt:SimpleItem Name="IsMotion" Value="true"/></tt:Data></tt:Message>
 ```
+
+Each edge also emits `tns1:VideoSource/MotionAlarm` (`State`) and
+`tns1:RuleEngine/MotionRegionDetector/Motion` (`IsMotion`) — alongside
+`CellMotionDetector`, the three standard ONVIF motion topic names.
 
 `changed` is `false` on a repeated trigger of the same state and nothing is
 queued, so the caller may be as chatty as it likes.

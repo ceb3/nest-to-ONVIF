@@ -3,7 +3,7 @@ package viewer
 import (
 	"sync"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/events"
+	"github.com/ceb3/nest-to-ONVIF/internal/events"
 )
 
 // EventBus fans out motion edges to SSE subscribers.

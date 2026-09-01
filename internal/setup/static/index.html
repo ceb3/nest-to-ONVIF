@@ -249,7 +249,7 @@
             <div class="guide-body">
               <p><strong>Suggested VM:</strong> 2+ CPU cores, 4&nbsp;GB RAM (more for many cameras), 20&nbsp;GB disk. Debian&nbsp;12 or Ubuntu&nbsp;22.04/24.04 on Proxmox, ESXi, Hyper-V, or a small x86_64 box (e.g. Intel&nbsp;N100). Use <strong>bridged</strong> networking so the VM gets a real LAN address. Reserve one unused IPv4 per Nest camera (e.g. <code>192.168.1.8</code>–<code>.13</code>) plus the VM's own IP for Docker port bindings.</p>
               <ol>
-                <li>Clone on the VM: <code>git clone https://github.com/mustacheride/nest-to-ONVIF.git /opt/nest-bridge</code></li>
+                <li>Clone on the VM: <code>git clone https://github.com/ceb3/nest-to-ONVIF.git /opt/nest-bridge</code></li>
                 <li>Check requirements: <code>cd /opt/nest-bridge &amp;&amp; bin/host-check</code></li>
                 <li>Install OS packages (if needed): <code>sudo bin/install-packages</code></li>
                 <li>Install Docker + Compose (if needed): <code>sudo bin/install-docker</code></li>

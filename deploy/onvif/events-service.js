@@ -37,15 +37,33 @@
  * it for the five operations Protect actually calls.
  *
  * Environment:
- *   ONVIF_MOTION_TOPIC     default tns1:RuleEngine/CellMotionDetector/Motion
+ *   ONVIF_MOTION_TOPIC     optional — if set, emit only this topic (legacy)
  *   ONVIF_SUB_TIMEOUT_SECS default 60 - subscription lifetime advertised
  */
 
 const url = require("url");
 const logger = require("./log-manager");
 
-const MOTION_TOPIC = process.env.ONVIF_MOTION_TOPIC ||
-    "tns1:RuleEngine/CellMotionDetector/Motion";
+const VIDEO_SOURCE_TOKEN = "video_source_config";
+
+// Standard ONVIF motion topic names emitted on each state change.
+const MOTION_TOPICS = [
+    {
+        path: "tns1:VideoSource/MotionAlarm",
+        kind: "motionAlarm",
+    },
+    {
+        path: "tns1:RuleEngine/CellMotionDetector/Motion",
+        kind: "ruleEngine",
+        ruleName: "CellMotionDetector",
+    },
+    {
+        path: "tns1:RuleEngine/MotionRegionDetector/Motion",
+        kind: "ruleEngine",
+        ruleName: "MotionRegionDetector",
+    },
+];
+
 const SUB_TIMEOUT_SECS = parseInt(process.env.ONVIF_SUB_TIMEOUT_SECS || "60", 10);
 const SUB_TIMEOUT_MS = SUB_TIMEOUT_SECS * 1000;
 
@@ -58,6 +76,14 @@ const NS =
     'xmlns:tt="http://www.onvif.org/ver10/schema" ' +
     'xmlns:tns1="http://www.onvif.org/ver10/topics" ' +
     'xmlns:xs="http://www.w3.org/2001/XMLSchema"';
+
+function activeTopics() {
+    const custom = process.env.ONVIF_MOTION_TOPIC;
+    if (custom) {
+        return [{ path: custom, kind: "ruleEngine", ruleName: "MotionDetector" }];
+    }
+    return MOTION_TOPICS;
+}
 
 function iso(d) {
     return new Date(d).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -74,37 +100,82 @@ function send(response, xml) {
     response.end(xml);
 }
 
-// GetEventProperties' TopicSet wants the topic as nested elements, not the
+// GetEventProperties' TopicSet wants each topic as nested elements, not the
 // colon-and-slash form: <tns1:RuleEngine><CellMotionDetector>...
-function topicSetXml() {
-    const parts = MOTION_TOPIC.split("/");
+function topicPathToSetXml(topicPath, messageDescription) {
+    const parts = topicPath.split("/");
     const open = parts
         .map((p, i) => "<" + p + (i === parts.length - 1 ? ' wstop:topic="true"' : "") + ">")
         .join("");
     const close = parts.slice().reverse().map((p) => "</" + p + ">").join("");
-    const desc =
-        '<tt:MessageDescription IsProperty="true">' +
+    return open + messageDescription + close;
+}
+
+function motionAlarmDescription() {
+    return '<tt:MessageDescription IsProperty="true">' +
+        "<tt:Source>" +
+        '<tt:SimpleItemDescription Name="Source" Type="tt:ReferenceToken"/>' +
+        "</tt:Source>" +
+        '<tt:Data><tt:SimpleItemDescription Name="State" Type="xs:boolean"/></tt:Data>' +
+        "</tt:MessageDescription>";
+}
+
+function ruleEngineDescription() {
+    return '<tt:MessageDescription IsProperty="true">' +
         "<tt:Source>" +
         '<tt:SimpleItemDescription Name="VideoSourceConfigurationToken" Type="tt:ReferenceToken"/>' +
         '<tt:SimpleItemDescription Name="RuleName" Type="xs:string"/>' +
         "</tt:Source>" +
         '<tt:Data><tt:SimpleItemDescription Name="IsMotion" Type="xs:boolean"/></tt:Data>' +
         "</tt:MessageDescription>";
-    return open + desc + close;
 }
 
-function motionMessage(state, when) {
+function topicSetXml() {
+    return activeTopics().map((topic) => {
+        const desc = topic.kind === "motionAlarm"
+            ? motionAlarmDescription()
+            : ruleEngineDescription();
+        return topicPathToSetXml(topic.path, desc);
+    }).join("");
+}
+
+function notificationMessage(topicPath, body) {
     return "<wsnt:NotificationMessage>" +
         '<wsnt:Topic Dialect="http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet">' +
-        MOTION_TOPIC + "</wsnt:Topic>" +
-        "<wsnt:Message>" +
+        topicPath + "</wsnt:Topic>" +
+        "<wsnt:Message>" + body + "</wsnt:Message></wsnt:NotificationMessage>";
+}
+
+function motionAlarmMessage(state, when) {
+    const body =
         '<tt:Message UtcTime="' + iso(when) + '" PropertyOperation="Changed">' +
         "<tt:Source>" +
-        '<tt:SimpleItem Name="VideoSourceConfigurationToken" Value="video_source_config"/>' +
-        '<tt:SimpleItem Name="RuleName" Value="MotionDetector"/>' +
+        '<tt:SimpleItem Name="Source" Value="' + VIDEO_SOURCE_TOKEN + '"/>' +
+        "</tt:Source>" +
+        '<tt:Data><tt:SimpleItem Name="State" Value="' + (state ? "true" : "false") + '"/></tt:Data>' +
+        "</tt:Message>";
+    return notificationMessage("tns1:VideoSource/MotionAlarm", body);
+}
+
+function ruleEngineMessage(topicPath, state, when, ruleName) {
+    const body =
+        '<tt:Message UtcTime="' + iso(when) + '" PropertyOperation="Changed">' +
+        "<tt:Source>" +
+        '<tt:SimpleItem Name="VideoSourceConfigurationToken" Value="' + VIDEO_SOURCE_TOKEN + '"/>' +
+        '<tt:SimpleItem Name="RuleName" Value="' + ruleName + '"/>' +
         "</tt:Source>" +
         '<tt:Data><tt:SimpleItem Name="IsMotion" Value="' + (state ? "true" : "false") + '"/></tt:Data>' +
-        "</tt:Message></wsnt:Message></wsnt:NotificationMessage>";
+        "</tt:Message>";
+    return notificationMessage(topicPath, body);
+}
+
+function motionMessages(state, when) {
+    return activeTopics().map((topic) => {
+        if (topic.kind === "motionAlarm") {
+            return motionAlarmMessage(state, when);
+        }
+        return ruleEngineMessage(topic.path, state, when, topic.ruleName);
+    });
 }
 
 function getEventProperties() {
@@ -144,12 +215,12 @@ class EventsService {
     createPullPoint() {
         const id = "sub" + (++this.subCounter);
         const now = Date.now();
-        // Seeded with the current state so a fresh subscriber learns it
-        // immediately instead of waiting for the next edge.
+        // Seeded with the current state on every advertised topic so a fresh
+        // subscriber learns it immediately instead of waiting for the next edge.
         this.subscriptions[id] = {
             created: now,
             termination: now + SUB_TIMEOUT_MS,
-            queue: [motionMessage(this.motionState, now)]
+            queue: motionMessages(this.motionState, now),
         };
 
         const addr = this.camera.endpoints.eventsServiceUrl + "?sub=" + id;
@@ -207,20 +278,23 @@ class EventsService {
     }
 
     // Only queues on an actual change, so the caller can be as chatty as it
-    // likes without flooding Protect.
+    // likes without flooding subscribers. Each edge fans out to every motion topic
+    // advertised in GetEventProperties.
     setMotion(state) {
         if (state === this.motionState) {
             return { changed: false, subscribers: Object.keys(this.subscriptions).length };
         }
 
         this.motionState = state;
-        const msg = motionMessage(state, Date.now());
+        const msgs = motionMessages(state, Date.now());
         const ids = Object.keys(this.subscriptions);
         for (const id of ids) {
-            this.subscriptions[id].queue.push(msg);
+            this.subscriptions[id].queue.push(...msgs);
         }
 
-        logger.info(`Motion=${state} for ${this.camera.name} queued to ${ids.length} subscriber(s)`);
+        logger.info(
+            `Motion=${state} for ${this.camera.name} queued ${msgs.length} topic(s) to ${ids.length} subscriber(s)`
+        );
         return { changed: true, subscribers: ids.length };
     }
 
@@ -244,7 +318,8 @@ class EventsService {
                 ok: true,
                 motion: this.motionState,
                 changed: result.changed,
-                subscribers: result.subscribers
+                subscribers: result.subscribers,
+                topics: activeTopics().map((t) => t.path),
             }));
             return;
         }

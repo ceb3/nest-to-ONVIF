@@ -348,7 +348,9 @@ that failure is **correct**; see the section above.
 > from a broken one until a detection actually happens. Google publishes only when a
 > camera detects something, so verify events by triggering one — a doorbell press is
 > on-demand — and then watching the bridge log for `pubsub message` at debug level.
-> This path is only active when `events.onvif` is `true`.
+> This path is only active when `events.onvif` is `true` and at least one camera has
+> an `event:` block (or the wizard **ONVIF motion events** checkbox). See
+> [`EVENTS.md`](EVENTS.md) for the two-level configuration and ONVIF topic fan-out.
 
 **What `gcloud` cannot check.** Two things, and between them they account for most
 "no events ever arrive" reports.

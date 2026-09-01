@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mustacheride/nest-to-ONVIF/internal/config"
-	"github.com/mustacheride/nest-to-ONVIF/internal/sdm"
+	"github.com/ceb3/nest-to-ONVIF/internal/config"
+	"github.com/ceb3/nest-to-ONVIF/internal/sdm"
 )
 
 // Server is the setup wizard HTTP server.
