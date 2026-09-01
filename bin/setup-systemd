@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Install systemd units so macvlan comes up before Docker.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+setup_require_linux
+
+root="$(setup_repo_root)"
+deploy_dir="$(setup_deploy_dir)"
+setup_load_deploy_env "$deploy_dir"
+
+parent="${PARENT_IFACE:-$(setup_detect_parent_iface)}"
+install_root="${INSTALL_ROOT:-$root}"
+
+service_src="$deploy_dir/nest-onvif-macvlan.service"
+dropin_src="$deploy_dir/docker-nest-onvif.conf"
+[[ -f "$service_src" ]] || setup_die "missing $service_src"
+[[ -f "$dropin_src" ]] || setup_die "missing $dropin_src"
+
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+
+sed \
+  -e "s|^Environment=PARENT=.*|Environment=PARENT=${parent}|" \
+  -e "s|/opt/nest-bridge|${install_root}|g" \
+  "$service_src" >"$tmpdir/nest-onvif-macvlan.service"
+
+setup_run_privileged install -m 0644 "$tmpdir/nest-onvif-macvlan.service" /etc/systemd/system/nest-onvif-macvlan.service
+setup_run_privileged install -d /etc/systemd/system/docker.service.d
+setup_run_privileged install -m 0644 "$dropin_src" /etc/systemd/system/docker.service.d/nest-onvif.conf
+setup_run_privileged systemctl daemon-reload
+setup_run_privileged systemctl enable nest-onvif-macvlan.service
+
+setup_info "installed nest-onvif-macvlan.service (PARENT=$parent)"
+setup_info "installed docker.service.d/nest-onvif.conf"
+setup_warn "start macvlan now with: sudo systemctl start nest-onvif-macvlan.service"

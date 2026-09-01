@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Prepare deploy/config, generated YAML, compose host bindings, and deploy.env.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+BRIDGE_UID=10001
+root="$(setup_repo_root)"
+deploy_dir="$(setup_deploy_dir)"
+config="$(setup_config_path)"
+token="$root/tokens.json"
+config_dir="$deploy_dir/config"
+
+setup_load_deploy_env "$deploy_dir"
+host_ip="${HOST_IP:-$(setup_detect_host_ip)}"
+parent="${PARENT_IFACE:-$(setup_detect_parent_iface)}"
+
+setup_save_deploy_env "$host_ip" "$parent" "$root"
+setup_patch_compose_host_ip "$host_ip"
+
+if [[ -f "$config" ]]; then
+  "$BIN_DIR/generate-deploy-configs"
+else
+  setup_warn "no $config — skipping onvif.yml / mediamtx.yml generation"
+fi
+
+setup_run_privileged install -d -o "$BRIDGE_UID" -g "$BRIDGE_UID" "$config_dir"
+
+install_cred() {
+  local src="$1" dst="$2" mode="$3"
+  [[ -f "$src" ]] || return 0
+  setup_run_privileged install -m "$mode" -o "$BRIDGE_UID" -g "$BRIDGE_UID" "$src" "$config_dir/$dst"
+  setup_info "installed $config_dir/$dst"
+}
+
+install_cred "$config" config.yaml 600
+install_cred "$token" tokens.json 600
+
+pubsub_dst="$config_dir/pubsub-sa.json"
+if [[ -f "$root/setup-pubsub-sa.json" ]]; then
+  install_cred "$root/setup-pubsub-sa.json" pubsub-sa.json 400
+elif [[ -f "$root/pubsub-sa.json" ]]; then
+  install_cred "$root/pubsub-sa.json" pubsub-sa.json 400
+elif [[ ! -f "$pubsub_dst" ]]; then
+  setup_run_privileged bash -c "printf '{}\n' | install -m 400 -o $BRIDGE_UID -g $BRIDGE_UID /dev/stdin '$pubsub_dst'"
+  setup_info "installed empty $pubsub_dst (events disabled)"
+fi
+
+setup_info "deploy directory ready under $deploy_dir"

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Install OS packages required by macvlan setup and Docker installation.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+setup_require_linux
+setup_run_privileged true
+
+if setup_has_command apt-get; then
+  setup_info "Installing packages with apt-get"
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq
+  apt-get install -y --no-install-recommends \
+    bash \
+    ca-certificates \
+    curl \
+    gnupg \
+    iproute2 \
+    python3
+elif setup_has_command dnf; then
+  setup_info "Installing packages with dnf"
+  dnf install -y bash ca-certificates curl gnupg iproute python3
+elif setup_has_command yum; then
+  setup_info "Installing packages with yum"
+  yum install -y bash ca-certificates curl gnupg iproute python3
+else
+  setup_die "unsupported package manager; install bash, curl, ca-certificates, iproute2, and python3 manually"
+fi
+
+setup_info "base packages installed"

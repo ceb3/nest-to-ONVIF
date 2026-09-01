@@ -1,0 +1,106 @@
+# ---- Secrets and credentials --------------------------------------------
+# config.yaml holds the Google OAuth client secret and Device Access project ID.
+# Commit config.example.yaml instead.
+config.yaml
+config.*.yaml
+!config.example.yaml
+*.bak
+setup-draft.yaml
+setup-pubsub-sa.json
+
+# OAuth refresh tokens and cached access tokens
+tokens.json
+
+# Google service-account keys. Grants read on the Pub/Sub events subscription.
+# Google's own download name is <project>-<keyid>.json, which matches no obvious
+# pattern, so the net is cast wide deliberately: a key committed once is burned.
+pubsub-sa.json
+*-sa.json
+*service-account*.json
+*-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].json
+credentials.json
+client_secret*.json
+
+# Google Cloud service account keys
+*-service-account.json
+gcp-*.json
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.crt
+*.p12
+!testdata/**/*.pem
+!testdata/**/*.key
+
+# ---- Go ------------------------------------------------------------------
+# Compiled binaries. Shell helpers in bin/ are tracked.
+/bin/nest-bridge
+/bin/nest-bridge-*
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test and profiling output
+*.test
+*.out
+coverage.txt
+coverage.html
+profile.cov
+cpu.prof
+mem.prof
+trace.out
+
+# Go workspace files are developer-local
+go.work
+go.work.sum
+
+# Dependency directory, if vendoring is ever enabled
+/vendor/
+
+# ---- Runtime state -------------------------------------------------------
+# Output of `nest-bridge onvif-config`. Derived entirely from the git-ignored
+# config.yaml, so a committed copy could never be regenerated or checked by
+# anyone cloning the repo, and would drift the moment a camera changed.
+# The generator is covered by internal/onvif's golden test instead.
+/deploy/onvif.yml
+/deploy/mediamtx.yml
+
+# Recorded media and captured fixtures. RTP fixtures used by tests live in
+# testdata/ and are committed deliberately.
+/recordings/
+*.mp4
+*.h264
+*.ts
+!testdata/**/*.h264
+
+*.log
+logs/
+
+# ---- Docker --------------------------------------------------------------
+docker-compose.override.yml
+
+# ---- Editors and tooling -------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- macOS ---------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ---- Linux / Windows -----------------------------------------------------
+*.tmp
+Thumbs.db
+Desktop.ini

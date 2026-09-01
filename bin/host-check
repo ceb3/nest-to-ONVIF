@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+# Verify host requirements (mirrors the setup wizard System step).
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+failures=0
+warns=0
+
+check() {
+  local id="$1" label="$2" required="$3" status="$4" detail="$5"
+  local mark
+  case "$status" in
+    pass) mark="✓" ;;
+    warn) mark="!" ; warns=$((warns + 1)) ;;
+    *) mark="✗" ; [[ "$required" == "yes" ]] && failures=$((failures + 1)) ;;
+  esac
+  printf '  [%s] %s\n      %s\n' "$mark" "$label" "$detail"
+}
+
+setup_info "nest-to-ONVIF host check ($(hostname 2>/dev/null || echo unknown) / $(uname -s)/$(uname -m))"
+
+if [[ "$(uname -s)" == "Linux" ]]; then
+  check linux "Linux host" yes pass "Running on Linux."
+else
+  check linux "Linux host" yes fail "This machine is $(uname -s)/$(uname -m). Deploy on a Linux VM."
+fi
+
+if [[ "$(uname -s)" == "Linux" ]]; then
+  check macvlan "macvlan networking" yes pass "Linux supports per-camera macvlan interfaces."
+else
+  check macvlan "macvlan networking" yes fail "macvlan is not available on this platform."
+fi
+
+root="$(setup_repo_root 2>/dev/null || true)"
+if [[ -z "$root" ]]; then
+  check repo "Repository layout" yes fail "Missing deploy/docker-compose.yml. Set NEST_BRIDGE_ROOT."
+else
+  missing=()
+  [[ -f "$root/deploy/docker-compose.yml" ]] || missing+=("deploy/docker-compose.yml")
+  [[ -f "$root/deploy/macvlan-setup.sh" ]] || missing+=("deploy/macvlan-setup.sh")
+  if ((${#missing[@]} > 0)); then
+    check repo "Repository layout" yes fail "Missing ${missing[*]}"
+  else
+    check repo "Repository layout" yes pass "Found deploy files under $root/deploy."
+  fi
+fi
+
+if bridge="$(setup_bridge_bin 2>/dev/null)"; then
+  check bridge "nest-bridge binary" yes pass "Found $bridge"
+else
+  check bridge "nest-bridge binary" yes fail "Run: bin/build-bridge"
+fi
+
+if setup_has_command docker; then
+  check docker "Docker" yes pass "docker command available."
+else
+  check docker "Docker" yes fail "Install with: bin/install-docker"
+fi
+
+if setup_check_docker_compose; then
+  check compose "Docker Compose" yes pass "docker compose available."
+else
+  check compose "Docker Compose" yes fail "Install Docker Engine with the Compose plugin: bin/install-docker"
+fi
+
+ifaces="$(setup_list_lan_interfaces 2>/dev/null || true)"
+if [[ -n "$ifaces" ]]; then
+  summary="$(echo "$ifaces" | head -4 | paste -sd', ' -)"
+  count="$(echo "$ifaces" | wc -l | tr -d ' ')"
+  if [[ "$count" -gt 4 ]]; then
+    summary="$summary, and $((count - 4)) more"
+  fi
+  check lan "LAN network interface" yes pass "Detected: $summary"
+else
+  check lan "LAN network interface" yes fail "No up interface with a non-loopback IPv4 address."
+fi
+
+if [[ "$(uname -s)" == "Linux" ]] && setup_has_command ip; then
+  check ip "iproute2 (ip)" yes pass "ip command available for macvlan-setup.sh."
+elif [[ "$(uname -s)" != "Linux" ]]; then
+  check ip "iproute2 (ip)" yes fail "Requires Linux."
+else
+  check ip "iproute2 (ip)" yes fail "Install iproute2: bin/install-packages"
+fi
+
+if setup_has_command bash; then
+  check bash "bash" yes pass "bash available."
+else
+  check bash "bash" yes fail "bash not found."
+fi
+
+if [[ "$(id -u)" -eq 0 ]]; then
+  check privilege "Privileged setup (root or sudo)" no pass "Running as root."
+elif setup_has_command sudo; then
+  check privilege "Privileged setup (root or sudo)" no pass "sudo is available for macvlan setup."
+else
+  check privilege "Privileged setup (root or sudo)" no warn "Not root and sudo not found."
+fi
+
+echo
+if [[ "$failures" -eq 0 ]]; then
+  setup_info "All required checks passed."
+  exit 0
+fi
+setup_die "$failures required check(s) failed"

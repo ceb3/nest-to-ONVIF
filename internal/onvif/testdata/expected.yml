@@ -1,0 +1,71 @@
+runtime:
+  enable_debug_logs: false
+  probe_streams: false
+  probe_timeout_ms: 15000
+  ip_monitor_interval_ms: 5000
+host_sources:
+  - name: mediamtx
+    hostname: 192.168.1.15
+    rtsp_port: 8554
+    http_port: 8080
+virtual_cameras:
+  - name: Front doorbell
+    manufacturer: nest-bridge
+    model: Nest Virtual Camera
+    mac: "02:4E:53:54:00:01"
+    ip: 192.168.1.8/24
+    hardware_id: 81961c01-a7e0-5446-b22f-b53e224877f2
+    serial_number: "024E53540001"
+    host_source: mediamtx
+    rtsp_path_hq: /cam-front-doorbell-hq
+    rtsp_path_lq: /cam-front-doorbell-lq
+    snapshot_path: /cam-front-doorbell.jpg
+    stream_hq:
+      encoding: H264
+      width: 960
+      height: 1280
+      framerate: 30
+      bitrate: 2048
+      quality: 5
+    stream_lq:
+      encoding: H264
+      width: 480
+      height: 640
+      framerate: 30
+      bitrate: 512
+      quality: 3
+    audio_hq:
+      encoding: AAC
+      sample_rate: 48000
+      channels: 2
+      bitrate: 64
+    audio_lq:
+      encoding: AAC
+      sample_rate: 48000
+      channels: 2
+      bitrate: 32
+  - name: Side yard
+    manufacturer: nest-bridge
+    model: Nest Virtual Camera
+    mac: "02:4E:53:54:00:06"
+    ip: 192.168.1.13/24
+    hardware_id: dc3cf9f6-3322-56b0-876f-f5e6004a78ef
+    serial_number: "024E53540006"
+    host_source: mediamtx
+    rtsp_path_hq: /cam-side-yard-hq
+    rtsp_path_lq: /cam-side-yard-lq
+    snapshot_path: /cam-side-yard.jpg
+    stream_hq:
+      encoding: H264
+      width: 960
+      height: 1280
+      framerate: 30
+      bitrate: 2048
+      quality: 5
+    stream_lq:
+      encoding: H264
+      width: 480
+      height: 640
+      framerate: 30
+      bitrate: 512
+      quality: 3

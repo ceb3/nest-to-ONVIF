@@ -1,0 +1,63 @@
+# Copy to config.yaml and fill in credentials — see docs/SETUP.md.
+
+google:
+  project_id: "00000000-0000-0000-0000-000000000000"  # Device Access project UUID
+  client_id: "000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com"
+  client_secret: "GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx"
+  redirect_uri: "http://127.0.0.1:8190/oauth2callback"
+  pubsub_subscription: "projects/your-gcp-project/subscriptions/nest-events"
+  # Only needed when events.onvif is true. Google's download filename embeds the
+  # project and key ID, so rename the file to this rather than pasting the name
+  # it arrived with — `pubsub-sa.json` is git-ignored, an arbitrary name may not
+  # be. In the deployed container the mount makes this `/config/pubsub-sa.json`.
+  service_account_key: "pubsub-sa.json"
+
+media:
+  # MediaMTX RTSP endpoint the bridge publishes to.
+  rtsp_base_url: "rtsp://127.0.0.1:8554"
+
+# Optional: forward Nest detections from Pub/Sub to each camera's ONVIF motion
+# endpoint. Disabled by default — see docs/EVENTS.md for when to enable it.
+events:
+  onvif: false
+
+# Optional LAN live-view page (enabled by default on nest-bridge serve).
+# Stream URLs use MediaMTX HLS on port 8888 and snapshots on 8080.
+viewer:
+  listen: "0.0.0.0:8090"  # set to "off" to disable
+
+# Each camera's onvif mac and ip are its identity to ONVIF clients, which key
+# adoption off the MAC: changing either after adoption presents a new device.
+# nest-bridge serve streams 24/7 — use wire-powered cameras only (see docs/STREAMING.md).
+# They are the single source of truth — `nest-bridge onvif-config` renders them
+# into deploy/onvif.yml, and deploy/macvlan-setup.sh reads its interface table
+# from that file, so the host interfaces cannot drift from what is advertised.
+# The six placeholders below match the documented six-camera deployment.
+cameras:
+  - device_id: "enterprises/00000000-0000-0000-0000-000000000000/devices/0000000000000000000001"
+    name: "Front Door"
+    audio: true
+    onvif: { mac: "02:4E:53:54:00:01", ip: "192.168.1.8" }
+
+  - device_id: "enterprises/00000000-0000-0000-0000-000000000000/devices/0000000000000000000002"
+    name: "Driveway"
+    event: { linger: 60s }
+    onvif: { mac: "02:4E:53:54:00:02", ip: "192.168.1.9" }
+
+  - device_id: "enterprises/00000000-0000-0000-0000-000000000000/devices/0000000000000000000003"
+    name: "Back Yard"
+    event: { linger: 60s }
+    onvif: { mac: "02:4E:53:54:00:03", ip: "192.168.1.10" }
+
+  - device_id: "enterprises/00000000-0000-0000-0000-000000000000/devices/0000000000000000000004"
+    name: "Garage"
+    onvif: { mac: "02:4E:53:54:00:04", ip: "192.168.1.11" }
+
+  - device_id: "enterprises/00000000-0000-0000-0000-000000000000/devices/0000000000000000000005"
+    name: "Side Gate"
+    event: { linger: 60s }
+    onvif: { mac: "02:4E:53:54:00:05", ip: "192.168.1.12" }
+
+  - device_id: "enterprises/00000000-0000-0000-0000-000000000000/devices/0000000000000000000006"
+    name: "Porch"
+    onvif: { mac: "02:4E:53:54:00:06", ip: "192.168.1.13" }

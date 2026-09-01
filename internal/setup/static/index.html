@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nest-to-ONVIF Setup</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --card: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9cb3;
+      --accent: #3d8bfd;
+      --ok: #3dd68c;
+      --err: #ff6b6b;
+      --border: #2a3544;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    main { max-width: 840px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    h1 { font-size: 1.5rem; margin: 0 0 0.25rem; }
+    .sub { color: var(--muted); margin-bottom: 2rem; }
+    .steps { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .step-pill {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .step-pill.active { border-color: var(--accent); color: var(--text); background: #1e2a3d; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    h2 { font-size: 1.1rem; margin: 0 0 1rem; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin: 0.75rem 0 0.25rem; }
+    input[type=text], input[type=password], select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+    }
+    .row { display: flex; gap: 0.75rem; align-items: center; margin: 0.5rem 0; }
+    .row input[type=checkbox] { width: auto; }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 0.65rem 1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      margin-right: 0.5rem;
+    }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .msg { margin-top: 1rem; padding: 0.75rem; border-radius: 8px; font-size: 0.9rem; }
+    .msg.err { background: #3a1f1f; color: var(--err); }
+    .msg.ok { background: #1a3328; color: var(--ok); }
+    .hidden { display: none; }
+    pre.log {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      overflow: auto;
+      max-height: 240px;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+    }
+    .device { border-top: 1px solid var(--border); padding: 0.75rem 0; }
+    .device:first-child { border-top: 0; }
+    .badge { font-size: 0.75rem; color: var(--muted); }
+    .nav { margin-top: 1.5rem; }
+    .req {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.65rem 0;
+      border-top: 1px solid var(--border);
+    }
+    .req:first-child { border-top: 0; }
+    .req .icon { width: 1.25rem; flex-shrink: 0; font-weight: bold; }
+    .req.pass .icon { color: var(--ok); }
+    .req.fail .icon { color: var(--err); }
+    .req.warn .icon { color: #e8b84a; }
+    .req .body { flex: 1; }
+    .req .label { font-weight: 600; }
+    .req .detail { color: var(--muted); font-size: 0.85rem; margin-top: 0.15rem; }
+    .req .fix { color: var(--accent); font-size: 0.8rem; margin-top: 0.35rem; }
+    .host-info { color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; }
+    h3 { font-size: 0.95rem; margin: 1.25rem 0 0.5rem; color: var(--text); }
+    a { color: var(--accent); }
+    a:hover { text-decoration: underline; }
+    .callout {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+    }
+    .callout table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 0.5rem; }
+    .callout th, .callout td { text-align: left; padding: 0.35rem 0.5rem 0.35rem 0; vertical-align: top; border-top: 1px solid var(--border); }
+    .callout th { color: var(--muted); font-weight: 600; }
+    .callout tr:first-child th, .callout tr:first-child td { border-top: 0; }
+    details.guide {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 1rem 0;
+      background: var(--bg);
+    }
+    details.guide summary {
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    details.guide[open] summary { border-bottom: 1px solid var(--border); }
+    .guide-body { padding: 0.75rem 1rem 1rem; font-size: 0.85rem; color: var(--muted); }
+    .guide-body ol { margin: 0; padding-left: 1.25rem; }
+    .guide-body li { margin: 0.5rem 0; }
+    .guide-body code { font-size: 0.8rem; background: #0a0e14; padding: 0.1rem 0.35rem; border-radius: 4px; }
+    .section-divider { border-top: 1px solid var(--border); margin: 1.25rem 0 0.5rem; }
+    input[type=file] { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>nest-to-ONVIF Setup</h1>
+    <p class="sub">Configure Google credentials, choose cameras, and deploy the ONVIF layer.</p>
+    <div class="steps" id="steps"></div>
+    <div id="panel"></div>
+    <div id="flash"></div>
+  </main>
+  <script>
+    const steps = ['System', 'Google', 'Authorize', 'Cameras', 'Network', 'Deploy'];
+    let step = 0;
+    let status = {};
+    let discovery = { ready: false, checks: [] };
+    let cameras = [];
+    let hostIfaces = [];
+    let pubsubReady = false;
+    let authPollTimer = null;
+
+    function stopAuthPoll() {
+      if (authPollTimer) {
+        clearInterval(authPollTimer);
+        authPollTimer = null;
+      }
+    }
+
+    function startAuthPoll() {
+      stopAuthPoll();
+      authPollTimer = setInterval(async () => {
+        if (step !== 2) { stopAuthPoll(); return; }
+        const was = status.authorized;
+        await loadStatus();
+        if (status.authorized !== was) {
+          showAuthorize();
+        }
+      }, 2000);
+    }
+
+    function flash(msg, ok) {
+      const el = document.getElementById('flash');
+      el.innerHTML = `<div class="msg ${ok ? 'ok' : 'err'}">${msg}</div>`;
+      setTimeout(() => { el.innerHTML = ''; }, 8000);
+    }
+
+    async function api(path, opts = {}) {
+      const res = await fetch(path, opts);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || data.message || res.statusText);
+      return data;
+    }
+
+    function renderSteps() {
+      document.getElementById('steps').innerHTML = steps.map((s, i) =>
+        `<span class="step-pill ${i === step ? 'active' : ''}">${i + 1}. ${s}</span>`
+      ).join('');
+    }
+
+    async function loadStatus() {
+      status = await api('/api/status');
+    }
+
+    async function loadConfig() {
+      return api('/api/config');
+    }
+
+    function panel(html) {
+      document.getElementById('panel').innerHTML = html;
+    }
+
+    async function showDiscovery() {
+      try {
+        discovery = await api('/api/discovery');
+      } catch (e) {
+        flash(e.message, false);
+        discovery = { ready: false, checks: [] };
+      }
+      const checkFixes = {
+        linux: 'Use a Linux VM on your LAN (Debian 12 or Ubuntu 22.04+). See <code>docs/SETUP.md</code>.',
+        macvlan: 'macvlan only works on bare-metal Linux or a VM with bridged networking — not Docker Desktop on macOS/Windows.',
+        repo: 'Clone the full repository to <code>/opt/nest-bridge</code> or set <code>NEST_BRIDGE_ROOT</code>.',
+        bridge: 'In the repo: <code>bin/build-bridge</code>',
+        docker: 'On the VM: <code>sudo bin/install-docker</code>',
+        compose: 'On the VM: <code>sudo bin/install-docker</code>',
+        lan: 'Give the VM a LAN IPv4 on the same subnet as your NVR. Reserve one spare IP per Nest camera for ONVIF.',
+        ip: 'On the VM: <code>sudo bin/install-packages</code>',
+        bash: 'On the VM: <code>sudo bin/install-packages</code>',
+        privilege: 'Run host setup with <code>sudo</code> or SSH as root.',
+      };
+      const rows = (discovery.checks || []).map(c => {
+        const fix = c.status !== 'pass' && checkFixes[c.id]
+          ? `<div class="fix">→ ${checkFixes[c.id]}</div>` : '';
+        return `
+        <div class="req ${esc(c.status)}">
+          <div class="icon">${c.status === 'pass' ? '✓' : c.status === 'warn' ? '!' : '✗'}</div>
+          <div class="body">
+            <div class="label">${esc(c.label)}${c.required ? '' : ' <span class="badge">(optional)</span>'}</div>
+            <div class="detail">${esc(c.detail)}</div>
+            ${fix}
+          </div>
+        </div>`;
+      }).join('');
+      panel(`
+        <div class="card">
+          <h2>System discovery</h2>
+          <p class="host-info">${esc(discovery.hostname || 'unknown')} · ${esc(discovery.os || '')}/${esc(discovery.arch || '')}</p>
+          <p class="badge">This wizard runs on the <strong>Linux deployment VM</strong> — not on your laptop. From macOS or Windows, SSH to the VM and port-forward: <code>ssh -L 8190:127.0.0.1:8190 user@vm</code>, then open <code>http://127.0.0.1:8190</code>.</p>
+
+          <details class="guide" open>
+            <summary>Host setup — VM, clone, and bash scripts</summary>
+            <div class="guide-body">
+              <p><strong>Suggested VM:</strong> 2+ CPU cores, 4&nbsp;GB RAM (more for many cameras), 20&nbsp;GB disk. Debian&nbsp;12 or Ubuntu&nbsp;22.04/24.04 on Proxmox, ESXi, Hyper-V, or a small x86_64 box (e.g. Intel&nbsp;N100). Use <strong>bridged</strong> networking so the VM gets a real LAN address. Reserve one unused IPv4 per Nest camera (e.g. <code>192.168.1.8</code>–<code>.13</code>) plus the VM's own IP for Docker port bindings.</p>
+              <ol>
+                <li>Clone on the VM: <code>git clone https://github.com/mustacheride/nest-to-ONVIF.git /opt/nest-bridge</code></li>
+                <li>Check requirements: <code>cd /opt/nest-bridge &amp;&amp; bin/host-check</code></li>
+                <li>Install OS packages (if needed): <code>sudo bin/install-packages</code></li>
+                <li>Install Docker + Compose (if needed): <code>sudo bin/install-docker</code></li>
+                <li>Build the binary: <code>bin/build-bridge</code></li>
+                <li>One-shot host prep (macvlan, deploy files, optional systemd): <code>sudo bin/setup-host</code> — add <code>--up</code> to start containers, or use this wizard for Google/camera config and deploy.</li>
+                <li>Start the wizard: <code>./bin/nest-bridge setup</code> (listens on <code>127.0.0.1:8190</code>)</li>
+              </ol>
+              <p class="badge" style="margin-top:0.75rem">Individual scripts: <code>bin/generate-deploy-configs</code>, <code>bin/setup-deploy</code>, <code>bin/setup-macvlan</code>, <code>bin/setup-systemd</code>. Full walkthrough: <code>docs/SETUP.md</code>.</p>
+            </div>
+          </details>
+
+          ${rows || '<p class="badge">No checks returned.</p>'}
+          <div class="nav">
+            <button onclick="showDiscovery()">Re-check</button>
+            <button onclick="go(1)" ${discovery.ready ? '' : 'disabled'}>Continue</button>
+          </div>
+        </div>`);
+    }
+
+    function normalizeRedirect(uri) {
+      const u = (uri || '').trim();
+      if (!u) return 'http://127.0.0.1:8190/oauth2callback';
+      if (u.includes('localhost')) return 'http://127.0.0.1:8190/oauth2callback';
+      return u;
+    }
+
+    async function showGoogle() {
+      const cfg = await loadConfig();
+      const g = cfg.google || {};
+      const e = cfg.events || {};
+      const redirect = normalizeRedirect(g.redirect_uri);
+      panel(`
+        <div class="card">
+          <h2>Google Cloud &amp; Device Access</h2>
+          <p class="badge">Use a consumer Google account that owns your Nest home (not Workspace or Advanced Protection). The only charge is Google's one-time $5 Device Access fee — no Nest Aware required.</p>
+
+          <div class="callout">
+            <strong>Three identifiers — do not mix these up</strong>
+            <table>
+              <tr><th>Cloud project ID</th><td><code>my-project-123456</code> — APIs, Pub/Sub subscription, IAM</td></tr>
+              <tr><th>Device Access project ID</th><td>UUID — goes in <strong>Project ID</strong> below; every SDM API path</td></tr>
+              <tr><th>OAuth client ID</th><td><code>…apps.googleusercontent.com</code> — from Auth Platform → Clients</td></tr>
+            </table>
+          </div>
+
+          <details class="guide" open>
+            <summary>Setup checklist — where to find each value</summary>
+            <div class="guide-body">
+              <ol>
+                <li>Create a <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Google Cloud project</a>.</li>
+                <li>Enable the <a href="https://console.cloud.google.com/apis/library/smartdevicemanagement.googleapis.com" target="_blank" rel="noopener">Smart Device Management API</a> (required for streaming).</li>
+                <li>Enable <a href="https://console.cloud.google.com/apis/library/pubsub.googleapis.com" target="_blank" rel="noopener">Cloud Pub/Sub</a> (optional — only for motion events).</li>
+                <li>OAuth consent: <a href="https://console.cloud.google.com/auth/branding" target="_blank" rel="noopener">Branding</a> (app name + email; leave App domain empty) and <a href="https://console.cloud.google.com/auth/audience" target="_blank" rel="noopener">Audience</a> (External + add yourself as a test user). Stay in Testing — skip the logo.</li>
+                <li>Create a <a href="https://console.cloud.google.com/auth/clients" target="_blank" rel="noopener">Web application OAuth client</a> with authorized redirect URI <code>http://127.0.0.1:8190/oauth2callback</code> (matches the SSH tunnel URL; <code>localhost</code> also works if registered consistently, but Google treats it as a different URI).</li>
+                <li>In the <a href="https://console.nest.google.com/device-access" target="_blank" rel="noopener">Device Access Console</a>: pay the $5 fee, create a project with your OAuth client ID, and <strong>enable events</strong>. Record the Device Access UUID.</li>
+                <li>Optional events: create a pull <a href="https://console.cloud.google.com/cloudpubsub/subscription/list" target="_blank" rel="noopener">Pub/Sub subscription</a> named <code>sdm-events</code> pointing at Google's topic (from Device Access). Grant a <a href="https://console.cloud.google.com/iam-admin/serviceaccounts" target="_blank" rel="noopener">service account</a> <strong>Pub/Sub Subscriber on the subscription</strong> (not project-wide), then download its JSON key.</li>
+              </ol>
+              <p class="badge" style="margin-top:0.75rem">Full reference: <code>docs/GOOGLE-CLOUD.md</code> in the repository.</p>
+            </div>
+          </details>
+
+          <h3>Required — OAuth &amp; Device Access</h3>
+          <label>Device Access project ID (UUID, not Cloud project ID)</label>
+          <input id="project_id" type="text" value="${esc(g.project_id || '')}" placeholder="e.g. a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+          <label>OAuth client ID</label>
+          <input id="client_id" type="text" value="${esc(g.client_id || '')}" placeholder="….apps.googleusercontent.com">
+          <label>OAuth client secret</label>
+          <input id="client_secret" type="password" value="${esc(g.client_secret || '')}">
+          <label>Redirect URI <span class="badge">(must match OAuth client exactly)</span></label>
+          <input id="redirect_uri" type="text" value="${esc(redirect)}">
+
+          <details class="guide"${e.pubsub_subscription || cfg.has_pubsub_key ? ' open' : ''}>
+            <summary>Optional — Pub/Sub motion events</summary>
+            <div class="guide-body">
+              <p>Skip this section if you only need live video. To forward Nest detections as ONVIF motion on specific cameras, complete step 7 in the checklist above, then enter the Pub/Sub details below. Per-camera event toggles appear on the Cameras step once these are saved.</p>
+              <label>Pub/Sub subscription <span class="badge">(your Cloud project, not Google's topic)</span></label>
+              <input id="pubsub_subscription" type="text" value="${esc(e.pubsub_subscription || '')}" placeholder="projects/my-project-123456/subscriptions/sdm-events">
+              <label>Service account JSON key</label>
+              <input id="pubsub_key" type="file" accept=".json,application/json">
+              <p class="badge">${cfg.has_pubsub_key ? '✓ Key uploaded — select a file only to replace it' : 'From IAM → Service accounts → Keys'}</p>
+            </div>
+          </details>
+
+          <div class="nav">
+            <button class="secondary" onclick="go(0)">Back</button>
+            <button onclick="saveGoogle()">Save &amp; continue</button>
+          </div>
+        </div>`);
+    }
+
+    async function saveGoogle() {
+      try {
+        await api('/api/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            project_id: val('project_id'),
+            client_id: val('client_id'),
+            client_secret: val('client_secret'),
+            redirect_uri: normalizeRedirect(val('redirect_uri')),
+          }),
+        });
+        const subEl = document.getElementById('pubsub_subscription');
+        if (subEl) {
+          await api('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              onvif: false,
+              pubsub_subscription: subEl.value.trim(),
+            }),
+          });
+        }
+        const file = document.getElementById('pubsub_key')?.files[0];
+        if (file) {
+          const res = await fetch('/api/pubsub-key', { method: 'POST', body: file });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || res.statusText);
+          }
+        }
+        step = 2;
+        renderSteps();
+        showAuthorize();
+      } catch (e) { flash(e.message, false); }
+    }
+
+    async function showAuthorize() {
+      await loadStatus();
+      if (status.authorized) stopAuthPoll();
+      else startAuthPoll();
+      panel(`
+        <div class="card">
+          <h2>Authorize with Google</h2>
+          <p>Grant the bridge access to your Nest home. A browser tab will open Google's consent screen.</p>
+          <p class="badge" id="auth-status">Status: ${status.authorized ? '✓ Authorized' : 'Not authorized yet'}</p>
+          <button onclick="startAuth()">${status.authorized ? 'Re-authorize' : 'Authorize'}</button>
+          <div class="nav">
+            <button class="secondary" onclick="go(1)">Back</button>
+            <button id="auth-continue" onclick="go(3)" ${status.authorized ? '' : 'disabled'}>Continue</button>
+          </div>
+        </div>`);
+    }
+
+    async function startAuth() {
+      try {
+        const { url } = await api('/api/auth/start', { method: 'POST' });
+        window.open(url, '_blank');
+        startAuthPoll();
+        flash('Complete authorization in the new tab — this page will update automatically.', true);
+      } catch (e) { flash(e.message, false); }
+    }
+
+    async function showCameras() {
+      await loadStatus();
+      if (!status.authorized) { flash('Authorize first', false); step = 2; return showAuthorize(); }
+      let devices;
+      try { devices = await api('/api/devices'); }
+      catch (e) { flash(e.message, false); return; }
+      const cfg = await loadConfig();
+      pubsubReady = !!cfg.pubsub_ready;
+      const existing = new Map((cfg.cameras || []).map(c => [c.device_id, c]));
+      cameras = devices.map(d => {
+        const prev = existing.get(d.device_id);
+        return {
+          device_id: d.device_id,
+          name: (prev && prev.name) || d.name,
+          selected: prev ? prev.selected !== false : false,
+          audio: !prev || prev.audio !== false,
+          events_onvif: prev ? !!prev.events_onvif : false,
+          linger: (prev && prev.linger) || '',
+          mac: (prev && prev.mac) || '',
+          ip: (prev && prev.ip) || '',
+          type: d.type,
+          protocols: (d.protocols || []).join(', '),
+        };
+      });
+      renderCameras();
+    }
+
+    function suggestIP(i) { return `192.168.1.${8 + i}`; }
+    function suggestMAC(i) { return `02:4E:53:54:00:${String(i + 1).padStart(2, '0').toUpperCase()}`; }
+
+    function renderCameras() {
+      readCameraFields();
+      panel(`
+        <div class="card">
+          <h2>Choose cameras</h2>
+          <p class="badge">Set a unique ONVIF IP and MAC for each camera. These are permanent — changing them after adoption presents a new device.</p>
+          ${cameras.map((c, i) => `
+            <div class="device">
+              <div class="row">
+                <input type="checkbox" id="sel${i}" ${c.selected ? 'checked' : ''} onchange="cameras[${i}].selected=this.checked; renderCameras()">
+                <strong>${esc(c.name)}</strong>
+                <span class="badge">${esc(c.type)} · ${esc(c.protocols)}</span>
+              </div>
+              ${c.selected ? `
+              <div class="row"><label><input type="checkbox" ${c.audio ? 'checked' : ''} onchange="cameras[${i}].audio=this.checked"> Audio (AAC)</label></div>
+              ${pubsubReady ? `<div class="row"><label><input type="checkbox" id="evt${i}" ${c.events_onvif ? 'checked' : ''} onchange="cameras[${i}].events_onvif=this.checked"> ONVIF motion events</label></div>` : ''}
+              <label>ONVIF IP</label>
+              <input type="text" id="ip${i}" value="${esc(c.ip || suggestIP(i))}">
+              <label>ONVIF MAC</label>
+              <input type="text" id="mac${i}" value="${esc(c.mac || suggestMAC(i))}">
+              ` : ''}
+            </div>`).join('')}
+          ${pubsubReady ? '<p class="badge">ONVIF motion events require notifications enabled per camera in the Google Home app.</p>' : '<p class="badge">Configure Pub/Sub on the Google step to enable per-camera ONVIF motion events.</p>'}
+          <div class="nav">
+            <button class="secondary" onclick="go(2)">Back</button>
+            <button onclick="saveCameras()">Save &amp; continue</button>
+          </div>
+        </div>`);
+    }
+
+    function readCameraFields() {
+      cameras.forEach((c, i) => {
+        const ip = document.getElementById('ip' + i);
+        const mac = document.getElementById('mac' + i);
+        const evt = document.getElementById('evt' + i);
+        if (ip) c.ip = ip.value.trim();
+        if (mac) c.mac = mac.value.trim();
+        if (evt) c.events_onvif = evt.checked;
+      });
+    }
+
+    async function saveCameras() {
+      readCameraFields();
+      try {
+        const res = await api('/api/cameras', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cameras }),
+        });
+        cameras = res.cameras;
+        step = 4;
+        renderSteps();
+        showNetwork();
+      } catch (e) { flash(e.message, false); }
+    }
+
+    async function showNetwork() {
+      await loadStatus();
+      const cfg = await loadConfig();
+      const n = cfg.network || {};
+      try {
+        hostIfaces = await api('/api/interfaces');
+      } catch (e) {
+        flash(e.message, false);
+        hostIfaces = [];
+      }
+      const savedIface = n.parent_iface || status.parent_iface || '';
+      const savedIP = n.host_ip || status.detected_host_ip || '';
+      let selectedIface = hostIfaces.find(i => i.name === savedIface)
+        || hostIfaces.find(i => i.default)
+        || hostIfaces[0];
+      if (!selectedIface && savedIface) {
+        selectedIface = { name: savedIface, addresses: savedIP ? [savedIP] : [] };
+        hostIfaces = [selectedIface];
+      }
+      const ifaceName = selectedIface ? selectedIface.name : '';
+      panel(`
+        <div class="card">
+          <h2>Network</h2>
+          <label>macvlan parent interface</label>
+          <select id="parent_iface" onchange="updateHostIPOptions()">
+            ${hostIfaces.length ? hostIfaces.map(i => `
+              <option value="${esc(i.name)}" ${i.name === ifaceName ? 'selected' : ''}>
+                ${esc(i.name)}${i.default ? ' (default route)' : ''}${i.mac ? ' · ' + esc(i.mac) : ''}
+              </option>`).join('') : `<option value="${esc(savedIface)}">${esc(savedIface || 'none detected')}</option>`}
+          </select>
+          <label>Deployment host IP (docker-compose bindings)</label>
+          <select id="host_ip"></select>
+          <p class="badge">Non-loopback, non-link-local IPv4 addresses on each interface. Docker and virtual interfaces are hidden.</p>
+          <div class="nav">
+            <button class="secondary" onclick="go(3)">Back</button>
+            <button onclick="saveNetwork()">Save &amp; continue</button>
+          </div>
+        </div>`);
+      updateHostIPOptions(savedIP);
+    }
+
+    function updateHostIPOptions(preferredIP) {
+      const ifaceSel = document.getElementById('parent_iface');
+      const ipSel = document.getElementById('host_ip');
+      if (!ifaceSel || !ipSel) return;
+      const iface = hostIfaces.find(i => i.name === ifaceSel.value);
+      const addrs = iface ? iface.addresses : [];
+      const want = preferredIP || ipSel.value || '';
+      if (addrs.length === 0) {
+        ipSel.innerHTML = `<option value="${esc(want)}">${esc(want || 'no addresses')}</option>`;
+        return;
+      }
+      ipSel.innerHTML = addrs.map(ip => `
+        <option value="${esc(ip)}" ${ip === want ? 'selected' : ''}>${esc(ip)}</option>
+      `).join('');
+      if (want && !addrs.includes(want)) {
+        ipSel.innerHTML += `<option value="${esc(want)}" selected>${esc(want)} (saved)</option>`;
+      }
+    }
+
+    async function saveNetwork() {
+      try {
+        await api('/api/network', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            host_ip: val('host_ip'),
+            parent_iface: val('parent_iface'),
+          }),
+        });
+        step = 5;
+        renderSteps();
+        showDeploy();
+      } catch (e) { flash(e.message, false); }
+    }
+
+    async function showDeploy() {
+      await loadStatus();
+      try { discovery = await api('/api/discovery'); } catch (_) {}
+      let review = '';
+      try {
+        const cfg = await loadConfig();
+        review = (cfg.cameras || []).filter(c => c.selected !== false).map(c =>
+          `${esc(c.name)} → ${esc(c.ip)} (${esc(c.mac)})${c.audio ? ' +audio' : ''}${c.events_onvif ? ' +motion' : ''}`
+        ).join('<br>');
+      } catch (e) {
+        review = `<span class="err">${esc(e.message)}</span>`;
+      }
+      const redeploy = status.deployed
+        ? '<p class="badge">Existing deployment detected — config will be updated and the ONVIF layer redeployed.</p>'
+        : (status.config_saved
+          ? '<p class="badge">config.yaml already exists — deploy will overwrite it with your current wizard choices.</p>'
+          : '');
+      panel(`
+        <div class="card">
+          <h2>Review &amp; deploy</h2>
+          ${redeploy}
+          <p class="badge">System ready: ${discovery.ready ? 'yes' : 'no'} · Docker: ${status.docker ? 'yes' : 'no'} · nest-bridge: ${status.bridge_built ? 'built' : 'run make build'}</p>
+          <div>${review}</div>
+          <button onclick="runDeploy()" ${discovery.ready && status.docker && status.bridge_built ? '' : 'disabled'}>${status.deployed ? 'Redeploy' : 'Deploy'}</button>
+          <pre class="log hidden" id="deploy-log"></pre>
+          <div class="nav">
+            <button class="secondary" onclick="go(4)">Back</button>
+          </div>
+        </div>`);
+    }
+
+    async function runDeploy() {
+      const logEl = document.getElementById('deploy-log');
+      logEl.classList.remove('hidden');
+      logEl.textContent = 'Deploying...';
+      try {
+        const res = await fetch('/api/deploy', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        const msg = data.message || data.error || res.statusText;
+        logEl.textContent = data.log || msg;
+        if (!res.ok || data.ok === false) {
+          flash(msg, false);
+          return;
+        }
+        flash(msg, true);
+        await loadStatus();
+      } catch (e) {
+        logEl.textContent = e.message;
+        flash(e.message, false);
+      }
+    }
+
+    function go(n) {
+      if (n !== 2) stopAuthPoll();
+      if (n > 0 && !discovery.ready) {
+        flash('Fix system requirements on the System step before continuing.', false);
+        step = 0;
+        renderSteps();
+        return showDiscovery();
+      }
+      step = n;
+      renderSteps();
+      [showDiscovery, showGoogle, showAuthorize, showCameras, showNetwork, showDeploy][n]();
+    }
+
+    function val(id) { return document.getElementById(id).value.trim(); }
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+    }
+
+    async function resumeWizard() {
+      try { discovery = await api('/api/discovery'); } catch (_) {}
+      await loadStatus();
+      const cfg = await loadConfig();
+      if (!discovery.ready) return go(0);
+      if (!status.configured) return go(1);
+      if (!status.authorized) return go(2);
+      if (!status.camera_count) return go(3);
+      if (!cfg.network?.host_ip) return go(4);
+      return go(5);
+    }
+
+    (async function init() {
+      renderSteps();
+      await resumeWizard();
+    })();
+  </script>
+</body>
+</html>

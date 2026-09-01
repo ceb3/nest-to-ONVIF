@@ -1,0 +1,18 @@
+{
+  "eventId": "6a2b0f4c-0000-4000-8000-000000000002",
+  "timestamp": "2026-08-30T20:35:12.000Z",
+  "resourceUpdate": {
+    "name": "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-2",
+    "events": {
+      "sdm.devices.events.CameraPerson.Person": {
+        "eventSessionId": "REDACTED-SESSION",
+        "eventId": "REDACTED-EVENT"
+      }
+    }
+  },
+  "userId": "REDACTED-USER",
+  "eventThreadId": "REDACTED-THREAD",
+  "resourceGroup": [
+    "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-2"
+  ]
+}

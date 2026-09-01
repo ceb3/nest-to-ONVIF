@@ -1,0 +1,15 @@
+{
+  "eventId": "6a2b0f4c-0000-4000-8000-000000000005",
+  "timestamp": "2026-08-30T20:38:00.000Z",
+  "resourceUpdate": {
+    "name": "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-OUT-OF-SCOPE",
+    "events": {
+      "sdm.devices.events.CameraMotion.Motion": {
+        "eventSessionId": "REDACTED-SESSION",
+        "eventId": "REDACTED-EVENT"
+      }
+    }
+  },
+  "userId": "REDACTED-USER",
+  "eventThreadId": "REDACTED-THREAD"
+}

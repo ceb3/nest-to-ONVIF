@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Configure per-camera macvlan interfaces from deploy/onvif.yml.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+setup_require_linux
+
+deploy_dir="$(setup_deploy_dir)"
+script="$deploy_dir/macvlan-setup.sh"
+onvif_config="$deploy_dir/onvif.yml"
+
+[[ -x "$script" ]] || setup_die "missing $script"
+[[ -f "$onvif_config" ]] || setup_die "missing $onvif_config — run: bin/generate-deploy-configs"
+
+setup_load_deploy_env "$deploy_dir"
+PARENT="${PARENT_IFACE:-$(setup_detect_parent_iface)}"
+
+setup_info "macvlan parent=$PARENT onvif_config=$onvif_config"
+setup_run_privileged env PARENT="$PARENT" ONVIF_CONFIG="$onvif_config" bash "$script"
+
+setup_info "macvlan interfaces configured"
+ip -br addr show | grep -E '^onvif-' || true

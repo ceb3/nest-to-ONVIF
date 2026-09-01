@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Build the nest-bridge binary into bin/nest-bridge.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+root="$(setup_repo_root)"
+setup_info "building nest-bridge in $root"
+make -C "$root" build
+setup_info "built $(setup_bridge_bin)"

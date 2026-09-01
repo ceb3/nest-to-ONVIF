@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# End-to-end host preparation for nest-to-ONVIF (mirrors the wizard System step).
+#
+# Usage:
+#   bin/setup-host                 # full setup
+#   bin/setup-host --check-only    # run host-check and exit
+#   bin/setup-host --skip-docker   # skip Docker install
+#   bin/setup-host --skip-systemd  # skip systemd unit install
+#   bin/setup-host --up            # also run docker compose up -d
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+check_only=false
+skip_docker=false
+skip_systemd=false
+compose_up=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --check-only) check_only=true ;;
+    --skip-docker) skip_docker=true ;;
+    --skip-systemd) skip_systemd=true ;;
+    --up) compose_up=true ;;
+    -h|--help)
+      sed -n '2,10p' "$0"
+      exit 0
+      ;;
+    *) setup_die "unknown option: $1" ;;
+  esac
+  shift
+done
+
+setup_require_linux
+root="$(setup_repo_root)"
+
+"$BIN_DIR/host-check" || setup_die "host check failed"
+
+if $check_only; then
+  exit 0
+fi
+
+if ! setup_has_command ip || ! setup_has_command curl || ! setup_has_command python3; then
+  setup_info "installing OS packages"
+  setup_run_privileged "$BIN_DIR/install-packages"
+fi
+
+if ! $skip_docker && ! setup_check_docker_compose; then
+  setup_info "installing Docker"
+  setup_run_privileged "$BIN_DIR/install-docker"
+fi
+
+if [[ ! -x "$(setup_bridge_bin 2>/dev/null || true)" ]]; then
+  setup_info "building nest-bridge"
+  "$BIN_DIR/build-bridge"
+fi
+
+setup_info "preparing deploy files"
+"$BIN_DIR/setup-deploy"
+
+setup_info "configuring macvlan interfaces"
+setup_run_privileged "$BIN_DIR/setup-macvlan"
+
+if ! $skip_systemd; then
+  setup_info "installing systemd units"
+  setup_run_privileged "$BIN_DIR/setup-systemd"
+fi
+
+if $compose_up; then
+  if ! setup_check_docker_compose; then
+    setup_die "docker compose not available"
+  fi
+  setup_info "starting Docker Compose stack"
+  (cd "$root/deploy" && docker compose up -d)
+  (cd "$root/deploy" && docker compose ps)
+fi
+
+setup_info "host setup complete"
+setup_info "next: ./bin/nest-bridge setup   (wizard)   or   cd deploy && docker compose up -d"

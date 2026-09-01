@@ -1,0 +1,18 @@
+{
+  "eventId": "6a2b0f4c-0000-4000-8000-000000000001",
+  "timestamp": "2026-08-30T20:34:01.123Z",
+  "resourceUpdate": {
+    "name": "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-1",
+    "events": {
+      "sdm.devices.events.CameraMotion.Motion": {
+        "eventSessionId": "REDACTED-SESSION",
+        "eventId": "REDACTED-EVENT"
+      }
+    }
+  },
+  "userId": "REDACTED-USER",
+  "eventThreadId": "REDACTED-THREAD",
+  "resourceGroup": [
+    "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-1"
+  ]
+}

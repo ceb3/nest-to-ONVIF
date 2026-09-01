@@ -1,0 +1,20 @@
+[Unit]
+Description=Virtual ONVIF camera macvlan interfaces
+After=network-online.target
+Wants=network-online.target
+# The ONVIF container cannot bind an interface that does not exist yet.
+# Ordering alone is not enough: see docker.service.d/nest-onvif.conf, which
+# makes Docker require this unit rather than merely follow it.
+Before=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# The host's LAN interface, the macvlan parent. Debian cloud images use eth0;
+# hosts with predictable interface names need this changed (for example ens18
+# on a Proxmox VM). The script fails loudly if the interface does not exist.
+Environment=PARENT=eth0
+ExecStart=/opt/nest-bridge/deploy/macvlan-setup.sh
+
+[Install]
+WantedBy=multi-user.target

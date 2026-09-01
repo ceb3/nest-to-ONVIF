@@ -1,0 +1,22 @@
+{
+  "eventId": "6a2b0f4c-0000-4000-8000-000000000003",
+  "timestamp": "2026-08-30T20:36:00.000Z",
+  "resourceUpdate": {
+    "name": "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-1",
+    "events": {
+      "sdm.devices.events.DoorbellChime.Chime": {
+        "eventSessionId": "REDACTED-SESSION",
+        "eventId": "REDACTED-EVENT"
+      },
+      "sdm.devices.events.CameraClipPreview.ClipPreview": {
+        "eventSessionId": "REDACTED-SESSION",
+        "previewUrl": "https://example.invalid/clip/REDACTED"
+      }
+    }
+  },
+  "userId": "REDACTED-USER",
+  "eventThreadId": "REDACTED-THREAD",
+  "resourceGroup": [
+    "enterprises/REDACTED-ENTERPRISE/devices/REDACTED-DEVICE-1"
+  ]
+}

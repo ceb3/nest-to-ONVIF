@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nest Bridge — Live View</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0f1115;
+      --panel: #1a1d24;
+      --border: #2a2f3a;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+      --accent: #8ab4f8;
+      --warn: #f9ab00;
+      --ok: #81c995;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel);
+    }
+    h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+    .meta { color: var(--muted); font-size: 0.85rem; }
+    .pager { display: flex; gap: 0.5rem; align-items: center; }
+    .pager button {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .pager button:disabled { opacity: 0.4; cursor: default; }
+    main { padding: 1rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
+    .tile {
+      position: relative;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+    }
+    .tile video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+    .tile .label {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      font-size: 0.85rem;
+    }
+    .tile .label span { font-weight: 500; }
+    .tile button.audio {
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: var(--text);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+    .tile button.audio.off { opacity: 0.6; }
+    .tile .badge {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      font-size: 0.7rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      background: var(--warn);
+      color: #111;
+      display: none;
+    }
+    .tile.event .badge { display: block; }
+    .empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem 1rem;
+    }
+    #toasts {
+      position: fixed;
+      top: 4rem;
+      right: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 100;
+      max-width: 320px;
+    }
+    .toast {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      animation: slide 0.2s ease-out;
+    }
+    .toast.off { border-left-color: var(--muted); }
+    @keyframes slide {
+      from { transform: translateX(1rem); opacity: 0; }
+      to { transform: none; opacity: 1; }
+    }
+    .tile .err {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f28b82;
+      font-size: 0.85rem;
+      background: rgba(0,0,0,0.6);
+      pointer-events: none;
+    }
+    .status.err { color: #f28b82; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Live View</h1>
+      <div class="meta" id="status">Loading cameras…</div>
+    </div>
+    <div class="pager">
+      <button type="button" id="prev" disabled>Previous</button>
+      <span id="pageLabel">—</span>
+      <button type="button" id="next" disabled>Next</button>
+    </div>
+  </header>
+  <main>
+    <div class="grid" id="grid"></div>
+  </main>
+  <div id="toasts"></div>
+  <script>
+    const PAGE_SIZE = 6;
+    let cameras = [];
+    let page = 0;
+    let eventsOn = false;
+    const players = new Map();
+    const activeEvents = new Set();
+
+    const grid = document.getElementById('grid');
+    const statusEl = document.getElementById('status');
+    const pageLabel = document.getElementById('pageLabel');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const toasts = document.getElementById('toasts');
+
+    function setStatus(msg, err) {
+      statusEl.textContent = msg;
+      statusEl.className = 'meta status' + (err ? ' err' : '');
+    }
+
+    function totalPages() {
+      return Math.max(1, Math.ceil(cameras.length / PAGE_SIZE));
+    }
+
+    function pageCameras() {
+      const start = page * PAGE_SIZE;
+      return cameras.slice(start, start + PAGE_SIZE);
+    }
+
+    function destroyPlayers() {
+      for (const [, p] of players) {
+        if (p.hls) p.hls.destroy();
+      }
+      players.clear();
+    }
+
+    function showTileError(tile, msg) {
+      let el = tile.querySelector('.err');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'err';
+        tile.appendChild(el);
+      }
+      el.textContent = msg;
+    }
+
+    function attachStream(video, url, tile) {
+      if (window.Hls && Hls.isSupported()) {
+        const hls = new Hls({ enableWorker: true });
+        hls.loadSource(url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (!data.fatal) return;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+            hls.startLoad();
+            return;
+          }
+          if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+            hls.recoverMediaError();
+            return;
+          }
+          showTileError(tile, 'Stream unavailable');
+        });
+        return hls;
+      }
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url;
+        video.addEventListener('error', () => showTileError(tile, 'Playback error'));
+        video.play().catch(() => {});
+        return null;
+      }
+      showTileError(tile, 'HLS not supported');
+      return null;
+    }
+
+    function render() {
+      destroyPlayers();
+      const slice = pageCameras();
+      grid.innerHTML = '';
+      if (!slice.length) {
+        grid.innerHTML = '<div class="empty">No cameras configured.</div>';
+        return;
+      }
+      for (const cam of slice) {
+        const tile = document.createElement('div');
+        tile.className = 'tile' + (activeEvents.has(cam.name) ? ' event' : '');
+        tile.dataset.name = cam.name;
+
+        const video = document.createElement('video');
+        video.muted = true;
+        video.playsInline = true;
+        video.autoplay = true;
+
+        const badge = document.createElement('div');
+        badge.className = 'badge';
+        badge.textContent = 'Motion';
+
+        const label = document.createElement('div');
+        label.className = 'label';
+        const title = document.createElement('span');
+        title.textContent = cam.name;
+        label.appendChild(title);
+
+        if (cam.audio) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'audio off';
+          btn.textContent = '🔇 Muted';
+          btn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            btn.classList.toggle('off', video.muted);
+            btn.textContent = video.muted ? '🔇 Muted' : '🔊 Audio';
+          });
+          label.appendChild(btn);
+        }
+
+        tile.appendChild(video);
+        tile.appendChild(badge);
+        tile.appendChild(label);
+        grid.appendChild(tile);
+
+        const hls = attachStream(video, cam.hls_lq, tile);
+        players.set(cam.name, { video, hls, tile });
+      }
+    }
+
+    function updatePager() {
+      const pages = totalPages();
+      page = Math.min(page, pages - 1);
+      pageLabel.textContent = cameras.length
+        ? `Page ${page + 1} of ${pages} (${cameras.length} cameras)`
+        : '—';
+      prevBtn.disabled = page <= 0;
+      nextBtn.disabled = page >= pages - 1;
+    }
+
+    function toast(msg, on) {
+      const el = document.createElement('div');
+      el.className = 'toast' + (on ? '' : ' off');
+      el.textContent = msg;
+      toasts.appendChild(el);
+      setTimeout(() => el.remove(), on ? 8000 : 4000);
+    }
+
+    function handleEvent(ev) {
+      if (!ev.camera) return;
+      const name = ev.camera;
+      if (ev.on) {
+        activeEvents.add(name);
+        if (cameras.find(c => c.name === name && c.events)) {
+          const kind = ev.kind ? ` (${ev.kind})` : '';
+          toast(`${name}: motion${kind}`, true);
+        }
+      } else {
+        activeEvents.delete(name);
+      }
+      const p = players.get(name);
+      if (p) p.tile.classList.toggle('event', ev.on);
+    }
+
+    function connectEvents() {
+      if (!eventsOn) return;
+      const es = new EventSource('/api/events');
+      es.onmessage = (e) => {
+        try { handleEvent(JSON.parse(e.data)); } catch (_) {}
+      };
+      es.onerror = () => {
+        es.close();
+        setTimeout(connectEvents, 5000);
+      };
+    }
+
+    async function load() {
+      try {
+        const res = await fetch('/api/cameras');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        cameras = data.cameras || [];
+        eventsOn = !!data.events_on;
+        setStatus(`${cameras.length} camera${cameras.length === 1 ? '' : 's'}`);
+        updatePager();
+        render();
+        connectEvents();
+      } catch (err) {
+        setStatus('Failed to load cameras: ' + err.message, true);
+      }
+    }
+
+    prevBtn.addEventListener('click', () => { page--; updatePager(); render(); });
+    nextBtn.addEventListener('click', () => { page++; updatePager(); render(); });
+
+    load();
+  </script>
+</body>
+</html>

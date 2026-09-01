@@ -1,0 +1,41 @@
+google:
+    client_id: 000000000000-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com
+    client_secret: GOCSPX-xxxxxxxxxxxxxxxxxxxxxxxx
+    project_id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+    pubsub_subscription: projects/your-gcp-project/subscriptions/nest-events
+    redirect_uri: http://127.0.0.1:8190/oauth2callback
+events:
+    onvif: false
+    pubsub_subscription: projects/your-gcp-project/subscriptions/nest-events
+network:
+    host_ip: 192.168.1.15
+    parent_iface: en0
+cameras:
+    - device_id: enterprises/00000000-0000-0000-0000-000000000000/devices/000000000000000000000001
+      name: Front doorbell
+      selected: true
+      audio: true
+      events_onvif: false
+      mac: 02:4E:53:54:00:01
+      ip: 192.168.1.8
+    - device_id: enterprises/00000000-0000-0000-0000-000000000000/devices/000000000000000000000002
+      name: Driveway
+      selected: true
+      audio: true
+      events_onvif: true
+      mac: 02:4E:53:54:00:02
+      ip: 192.168.1.9
+    - device_id: enterprises/00000000-0000-0000-0000-000000000000/devices/000000000000000000000003
+      name: Backyard
+      selected: true
+      audio: true
+      events_onvif: true
+      mac: 02:4E:53:54:00:03
+      ip: 192.168.1.10
+    - device_id: enterprises/00000000-0000-0000-0000-000000000000/devices/000000000000000000000004
+      name: Side yard
+      selected: true
+      audio: true
+      events_onvif: true
+      mac: 02:4E:53:54:00:06
+      ip: 192.168.1.13

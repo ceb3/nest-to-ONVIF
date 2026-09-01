@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Generate deploy/onvif.yml and deploy/mediamtx.yml from config.yaml.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/setup-common.sh
+source "$BIN_DIR/lib/setup-common.sh"
+
+root="$(setup_repo_root)"
+deploy_dir="$(setup_deploy_dir)"
+config="$(setup_config_path)"
+bridge="$(setup_bridge_bin)"
+
+[[ -f "$config" ]] || setup_die "missing $config — copy config.example.yaml or complete the setup wizard"
+
+setup_info "generating ONVIF config"
+"$bridge" -config="$config" onvif-config >"$deploy_dir/onvif.yml"
+setup_info "wrote $deploy_dir/onvif.yml"
+
+setup_info "generating MediaMTX config"
+"$bridge" -config="$config" mediamtx-config >"$deploy_dir/mediamtx.yml"
+setup_info "wrote $deploy_dir/mediamtx.yml"
